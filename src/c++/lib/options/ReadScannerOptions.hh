@@ -26,7 +26,8 @@ struct ReadScannerOptions
     ReadScannerOptions() :
         minMapq(15),
         breakendEdgeTrimProb(0.25),
-        properPairTrimProb(0.05)
+        properPairTrimProb(0.05),
+        minCandidateIndelSize(50)
     {}
 
     unsigned minMapq;
@@ -36,6 +37,9 @@ struct ReadScannerOptions
 
     /// report a pair as "proper pair" if fragement size is within x prob region removed from each edge
     float properPairTrimProb;
+
+    /// ignore indels smaller than this when building graph:
+    unsigned minCandidateIndelSize;
 };
 
 
