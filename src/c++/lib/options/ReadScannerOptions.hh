@@ -27,7 +27,11 @@ struct ReadScannerOptions
         minMapq(15),
         breakendEdgeTrimProb(0.25),
         properPairTrimProb(0.05),
-        minCandidateIndelSize(50)
+        minCandidateIndelSize(50),
+        minPairBreakendSize(40),
+        splitBreakendSizeFraction(0.1),
+        maxSplitBreakendSize(100),
+        minSplitBreakendSize(10)
     {}
 
     unsigned minMapq;
@@ -40,6 +44,22 @@ struct ReadScannerOptions
 
     /// ignore indels smaller than this when building graph:
     unsigned minCandidateIndelSize;
+
+    // whenever a breakend is predicted from a read pair junction, the predicted breakend range should be no
+    // smaller than this:
+    unsigned minPairBreakendSize;
+
+    // whenever a breakend is predicted from an individual read split (ie. non-assembled), set the predicted breakend size to this fraction of the
+    // event size (modified by the min and max limits below)
+    unsigned splitBreakendSizeFraction;
+
+    // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
+    // larger than this:
+    unsigned maxSplitBreakendSize;
+
+    // whenever a breakend is predicted from an individual read split (ie. non-assembled), the predicted breakend range should be no
+    // smaller than this:
+    unsigned minSplitBreakendSize;
 };
 
 
