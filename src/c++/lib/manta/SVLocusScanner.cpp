@@ -17,6 +17,7 @@
 
 #include "manta/SVLocusScanner.hh"
 #include "blt_util/align_path_bam_util.hh"
+#include "blt_util/align_path_util.hh"
 #include "blt_util/log.hh"
 #include "common/Exceptions.hh"
 
@@ -24,61 +25,117 @@
 
 
 
-SVLocusScanner::
-SVLocusScanner(
-    const ReadScannerOptions& opt,
-    const std::string& statsFilename,
-    const std::vector<std::string>& alignmentFilename) :
-    _opt(opt)
+struct simpleAlignment
 {
-    // pull in insert stats:
-    _rss.read(statsFilename.c_str());
+    simpleAlignment() :
+        is_fwd_strand(true),
+        pos(0)
+    {}
 
-    // cache the insert stats we'll be looking up most often:
-    BOOST_FOREACH(const std::string& file, alignmentFilename)
+    simpleAlignment(const bam_record& bamRead) :
+        is_fwd_strand(bamRead.is_fwd_strand()),
+        pos(bamRead.pos()-1)
     {
-        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
-        assert(index);
-        const ReadGroupStats rgs(_rss.getStats(*index));
+        bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),path);
+    }
 
-        _stats.resize(_stats.size()+1);
-        CachedReadGroupStats& stat(_stats.back());
+    bool is_fwd_strand;
+    pos_t pos;
+    ALIGNPATH::path_t path;
+};
+
+
+
+static
+void
+getSVCandidatesFromRead(
+    const ReadScannerOptions& opt,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
+    const simpleAlignment& align,
+    std::vector<SVCandidate>& candidates)
+{
+    using namespace ALIGNPATH;
+
+    const std::pair<unsigned,unsigned> ends(get_match_edge_segments(align.path));
+
+    unsigned pathIndex(0);
+    unsigned readOffset(0);
+    pos_t refHeadPos(align.pos);
+
+    const unsigned pathSize(align.path.size());
+    while (pathIndex<pathSize)
+    {
+        const path_segment& ps(align.path[pathIndex]);
+        const bool isBeginEdge(pathIndex<ends.first);
+        const bool isEndEdge(pathIndex>ends.second);
+        const bool isEdgeSegment(isBeginEdge || isEndEdge);
+
+        const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
+
+        assert(ps.type != SKIP);
+        assert(! (isEdgeSegment && isSwapStart));
+
+
+        unsigned nPathSegments(1); // number of path segments consumed
+        if (isEdgeSegment)
         {
-            Range& breakend(stat.breakendRegion);
-            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
-            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
-
-            if (breakend.min<0.) breakend.min = 0;
-            assert(breakend.max>0.);
+            // edge inserts are allowed for intron adjacent and grouper reads, edge deletions for intron adjacent only:
+            if (ps.type == INSERT) {
+            } else if (ps.type == DELETE) {
+            }
         }
+        else if (isSwapStart)
         {
-            Range& ppair(stat.properPair);
-            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
-            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+            const swap_info sinfo(align.path,pathIndex);
+            const unsigned swap_size(std::max(sinfo.insert_length,sinfo.delete_length));
 
-            if (ppair.min<0.) ppair.min = 0;
+            nPathSegments = sinfo.n_seg;
+            nPathSegments = process_swap(max_indel_size,al.path,read_seq,
+                                 sppr,obs,sample_no,
+                                 pathIndex,readOffset,refHeadPos);
 
-            assert(ppair.max>0.);
+        }
+        else if (is_segment_type_indel(align.path[pathIndex].type))
+        {
+            process_simple_indel(max_indel_size,al.path,read_seq,
+                                 sppr,obs,sample_no,
+                                 pathIndex,read_offset,ref_head_pos);
+
+        }
+
+        for (unsigned i(0); i<nPathSegments; ++i)
+        {
+            increment_path(align.path,pathIndex,readOffset,refHeadPos);
         }
     }
 }
 
 
 
+static
 void
-SVLocusScanner::
 getReadBreakendsImpl(
     const ReadScannerOptions& opt,
-    const CachedReadGroupStats& rstats,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& localRead,
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates,
     known_pos_range2& localEvidenceRange)
 {
-    ALIGNPATH::path_t apath;
-    bam_cigar_to_apath(localRead.raw_cigar(),localRead.n_cigar(),apath);
-
+    const simpleAlignment align(localRead);
     const unsigned readSize(apath_read_length(apath));
+
+
+    // 1) process any large indels in the localRead:
+    {
+        getSVCandidatesFromRead(opt,rstats,localRead,candidates);
+        BOOST_FOREACH(const ALIGNPATH::path_segment ps, apath)
+        {
+            ps.type
+        }
+    }
+
+
     const unsigned localRefLength(apath_ref_length(apath));
 
     unsigned thisReadNoninsertSize(0);
@@ -179,11 +236,11 @@ getReadBreakendsImpl(
 
 
 
+static
 void
-SVLocusScanner::
 getSVLociImpl(
     const ReadScannerOptions& opt,
-    const CachedReadGroupStats& rstats,
+    const SVLocusScanner::CachedReadGroupStats& rstats,
     const bam_record& bamRead,
     std::vector<SVLocus>& loci)
 {
@@ -226,6 +283,47 @@ getSVLociImpl(
         }
 
         loci.push_back(locus);
+    }
+}
+
+
+
+SVLocusScanner::
+SVLocusScanner(
+    const ReadScannerOptions& opt,
+    const std::string& statsFilename,
+    const std::vector<std::string>& alignmentFilename) :
+    _opt(opt)
+{
+    // pull in insert stats:
+    _rss.read(statsFilename.c_str());
+
+    // cache the insert stats we'll be looking up most often:
+    BOOST_FOREACH(const std::string& file, alignmentFilename)
+    {
+        const boost::optional<unsigned> index(_rss.getGroupIndex(file));
+        assert(index);
+        const ReadGroupStats rgs(_rss.getStats(*index));
+
+        _stats.resize(_stats.size()+1);
+        CachedReadGroupStats& stat(_stats.back());
+        {
+            Range& breakend(stat.breakendRegion);
+            breakend.min=rgs.fragSize.quantile(_opt.breakendEdgeTrimProb);
+            breakend.max=rgs.fragSize.quantile((1-_opt.breakendEdgeTrimProb));
+
+            if (breakend.min<0.) breakend.min = 0;
+            assert(breakend.max>0.);
+        }
+        {
+            Range& ppair(stat.properPair);
+            ppair.min=rgs.fragSize.quantile(_opt.properPairTrimProb);
+            ppair.max=rgs.fragSize.quantile((1-_opt.properPairTrimProb));
+
+            if (ppair.min<0.) ppair.min = 0;
+
+            assert(ppair.max>0.);
+        }
     }
 }
 
