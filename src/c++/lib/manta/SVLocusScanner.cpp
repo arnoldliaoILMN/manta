@@ -47,11 +47,43 @@ struct simpleAlignment
 
 
 static
+SVCandidate
+GetSplitSVCandidate(
+    const ReadScannerOptions& opt,
+    const int32_t alignTid,
+    const pos_t leftPos,
+    const pos_t rightPos)
+{
+    SVCandidate sv;
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
+
+    localBreakend.splitCount++;
+    remoteBreakend.splitCount++;
+
+    localBreakend.state = SVBreakendState::RIGHT_OPEN;
+    remoteBreakend.state = SVBreakendState::LEFT_OPEN;
+
+    localBreakend.interval.tid = alignTid;
+    remoteBreakend.interval.tid = alignTid;
+
+    localBreakend.interval.range.set_begin_pos(std::max(0,leftPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
+    localBreakend.interval.range.set_end_pos(leftPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+
+    remoteBreakend.interval.range.set_begin_pos(std::max(0,rightPos-static_cast<pos_t>(opt.minSplitBreakendSize)));
+    remoteBreakend.interval.range.set_end_pos(rightPos+static_cast<pos_t>(opt.minSplitBreakendSize));
+
+    return sv;
+}
+
+
+
+static
 void
 getSVCandidatesFromRead(
     const ReadScannerOptions& opt,
-    const SVLocusScanner::CachedReadGroupStats& rstats,
     const simpleAlignment& align,
+    const int32_t alignTid,
     std::vector<SVCandidate>& candidates)
 {
     using namespace ALIGNPATH;
@@ -70,37 +102,49 @@ getSVCandidatesFromRead(
         const bool isEndEdge(pathIndex>ends.second);
         const bool isEdgeSegment(isBeginEdge || isEndEdge);
 
+        // in this case, swap means combined insertion/deletion
         const bool isSwapStart(is_segment_swap_start(align.path,pathIndex));
 
         assert(ps.type != SKIP);
         assert(! (isEdgeSegment && isSwapStart));
 
-
         unsigned nPathSegments(1); // number of path segments consumed
         if (isEdgeSegment)
         {
-            // edge inserts are allowed for intron adjacent and grouper reads, edge deletions for intron adjacent only:
-            if (ps.type == INSERT) {
-            } else if (ps.type == DELETE) {
+            // edge inserts are allowed for intron adjacent and grouper reads, edge deletions for intron adjacent only
+
+            if (ps.type == INSERT)
+            {
+                // ignore for now...
+            }
+            else if (ps.type == SOFT_CLIP)
+            {
+                // ignore for now...
             }
         }
         else if (isSwapStart)
         {
             const swap_info sinfo(align.path,pathIndex);
-            const unsigned swap_size(std::max(sinfo.insert_length,sinfo.delete_length));
+            if(sinfo.delete_length >= opt.minCandidateIndelSize)
+            {
+                candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+sinfo.delete_length));
+            }
 
             nPathSegments = sinfo.n_seg;
-            nPathSegments = process_swap(max_indel_size,al.path,read_seq,
-                                 sppr,obs,sample_no,
-                                 pathIndex,readOffset,refHeadPos);
-
         }
         else if (is_segment_type_indel(align.path[pathIndex].type))
         {
-            process_simple_indel(max_indel_size,al.path,read_seq,
-                                 sppr,obs,sample_no,
-                                 pathIndex,read_offset,ref_head_pos);
+            // regular indel:
 
+            if(ps.type == DELETE)
+            {
+                if(align.path[pathIndex].length >= opt.minCandidateIndelSize)
+                {
+                    candidates.push_back(GetSplitSVCandidate(opt,alignTid,refHeadPos,refHeadPos+align.path[pathIndex].length));
+                }
+            }
+
+            // ignore other indel types for now...
         }
 
         for (unsigned i(0); i<nPathSegments; ++i)
@@ -122,36 +166,29 @@ getReadBreakendsImpl(
     std::vector<SVCandidate>& candidates,
     known_pos_range2& localEvidenceRange)
 {
-    const simpleAlignment align(localRead);
-    const unsigned readSize(apath_read_length(apath));
-
+    const simpleAlignment localAlign(localRead);
 
     // 1) process any large indels in the localRead:
-    {
-        getSVCandidatesFromRead(opt,rstats,localRead,candidates);
-        BOOST_FOREACH(const ALIGNPATH::path_segment ps, apath)
-        {
-            ps.type
-        }
-    }
+    getSVCandidatesFromRead(opt, localAlign, localRead.target_id(), candidates);
 
-
-    const unsigned localRefLength(apath_ref_length(apath));
+    // 2) process anomalous read pair relationships:
+    const unsigned readSize(apath_read_length(localAlign.path));
+    const unsigned localRefLength(apath_ref_length(localAlign.path));
 
     unsigned thisReadNoninsertSize(0);
-    if (localRead.is_fwd_strand())
+    if (localAlign.is_fwd_strand)
     {
-        thisReadNoninsertSize=(readSize-apath_read_trail_size(apath));
+        thisReadNoninsertSize=(readSize-apath_read_trail_size(localAlign.path));
     }
     else
     {
-        thisReadNoninsertSize=(readSize-apath_read_lead_size(apath));
+        thisReadNoninsertSize=(readSize-apath_read_lead_size(localAlign.path));
     }
 
-    candidates.resize(1);
+    SVCandidate sv;
 
-    SVBreakend& localBreakend(candidates[0].bp1);
-    SVBreakend& remoteBreakend(candidates[0].bp2);
+    SVBreakend& localBreakend(sv.bp1);
+    SVBreakend& remoteBreakend(sv.bp2);
 
     localBreakend.readCount = 1;
 
@@ -232,6 +269,14 @@ getReadBreakendsImpl(
             remoteBreakend.interval.range.set_begin_pos(startRefPos - breakendSize);
         }
     }
+
+    known_pos_range2 mergeRange(localBreakend.interval.range);
+    mergeRange.merge_range(remoteBreakend.interval.range);
+
+    // read pair separation is non-anomalous:
+    if(mergeRange.size() <= rstats.breakendRegion.max) return;
+
+    candidates.push_back(sv);
 }
 
 
@@ -386,7 +431,7 @@ getSVLoci(
 
     if (! bamRead.is_chimeric())
     {
-        if (std::abs(bamRead.template_size())<2000) return;
+        if (std::abs(bamRead.template_size())<500) return;
     }
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
