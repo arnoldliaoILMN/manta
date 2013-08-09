@@ -507,6 +507,11 @@ getNodeMergeableIntersect(
 
         /// this bool indicates the (rare) case where the intersection set locals overlap with the intersection set remotes
         bool isIntersectOwnRemotes(false);
+        std::set<NodeAddressType> inputIntersectRemotes;
+        BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
+        {
+            inputIntersectRemotes.insert(std::make_pair(edgeInfo.first.first,edgeInfo.second));
+        }
 
         BOOST_FOREACH(const EdgeInfoType edgeInfo, inputIntersectEdges)
         {
@@ -526,13 +531,9 @@ getNodeMergeableIntersect(
                 if (intersectLocus.isNoiseNode(_minMergeEdgeCount,intersectAddy.second))
                 {
                     // check for the rare remote intersect condition:
-                    BOOST_FOREACH(const EdgeInfoType edgeInfo2, inputIntersectEdges)
+                    if(! isIntersectOwnRemotes)
                     {
-                        if((intersectAddy.first == edgeInfo2.first.first) &&
-                           (intersectAddy.second == edgeInfo2.second))
-                        {
-                            isIntersectOwnRemotes = true;
-                        }
+                        if(inputIntersectRemotes.count(intersectAddy)) isIntersectOwnRemotes = true;
                     }
                     continue;
                 }
