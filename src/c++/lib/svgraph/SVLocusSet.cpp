@@ -104,7 +104,7 @@ merge(const SVLocus& inputLocus)
         log_os << "SVLocusSet::merge insersect_size: " << intersectNodes.size() << "\n";
         BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
         {
-            log_os << "i-index: " << val << " node: " <<  getNode(val) << "\n";
+            log_os << "intersect address: " << val << " node: " <<  getNode(val) << "\n";
         }
 #endif
 
@@ -151,7 +151,7 @@ merge(const SVLocus& inputLocus)
         log_os << "intersect2_size: " << intersectNodes.size() << "\n";
         BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
         {
-            log_os << "i2-index: " << val << " node: " <<  getNode(val) << "\n";
+            log_os << "intersect2 address: " << val << " node: " <<  getNode(val) << "\n";
         }
 #endif
 
@@ -567,7 +567,7 @@ getNodeMergeableIntersect(
     }
 
 #ifdef DEBUG_SVL
-    log_os << "SVLocusSet::getNodeMergableIntersect END. IntersectNodes:\n";
+    log_os << "SVLocusSet::getNodeMergableIntersect END. IntersectNodeSize: " << mergeIntersectNodes.size() << " Nodes:\n";
     BOOST_FOREACH(const NodeAddressType addy, mergeIntersectNodes)
     {
         log_os << "\tInode: " << addy << "\n";
@@ -621,7 +621,7 @@ moveIntersectToLowIndex(
     }
 
 #ifdef DEBUG_SVL
-    log_os << "Reassigned all intersecting nodes to index: " << locusIndex << " shli: " << startHeadLocusIndex << " sli:" << startLocusIndex << "\n";
+    log_os << "Reassigned all intersecting nodes to locusIndex: " << locusIndex << " startHeadLocusIndex: " << startHeadLocusIndex << " startLocusIndex:" << startLocusIndex << "\n";
     checkState();
 #endif
 }
