@@ -825,6 +825,16 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
 
         BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
     }
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.clean();
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
