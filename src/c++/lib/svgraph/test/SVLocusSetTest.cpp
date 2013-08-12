@@ -809,6 +809,23 @@ BOOST_AUTO_TEST_CASE( test_SVLocusSmallRegionClean )
 
 }
 
+BOOST_AUTO_TEST_CASE( test_SVLocusSmallDelRegionClean )
+{
+    // regions picked up from deletions have counts on both sides
+    //
+    SVLocus locus1;
+    locusAddDoublePair(locus1,1,10,20,1,30,40);
+
+    {
+        SVLocusSet set1(2);
+        set1.merge(locus1);
+        const SVLocusSet& cset1(set1);
+
+        set1.cleanRegion(GenomeInterval(1,0,70));
+
+        BOOST_REQUIRE_EQUAL(cset1.nonEmptySize(),0u);
+    }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

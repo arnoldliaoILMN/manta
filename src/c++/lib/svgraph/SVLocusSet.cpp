@@ -721,19 +721,34 @@ cleanRegion(const GenomeInterval interval)
     log_os << "cleanRegion interval: " << interval << "\n";
 #endif
 
-    std::set<NodeAddressType> intersectNodes;
-    getRegionIntersect(interval,intersectNodes);
-
-    BOOST_FOREACH(const NodeAddressType& val, intersectNodes)
+    // repeat cleaning until all self-dependencies in region have been cleaned up:
+    for(unsigned iteration(1); true; iteration++)
     {
-        SVLocus& locus(getLocus(val.first));
-        if (locus.empty()) continue;
-        _totalCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
-        if (locus.empty()) _emptyLoci.insert(locus.getIndex());
+#ifdef DEBUG_SVL
+        log_os << "cleanRegion iteration: " << iteration << "\n";
+#endif
+
+        std::set<NodeAddressType> intersectNodes;
+        getRegionIntersect(interval,intersectNodes);
+
+        // process nodes in reverse to properly handle instances when a locus has
+        // multiple intersect nodes. This way we won't try to iterate into an
+        // address which has been shifted by node deletion:
+        unsigned iterationCleaned(0);
+        BOOST_REVERSE_FOREACH(const NodeAddressType& val, intersectNodes)
+        {
+            SVLocus& locus(getLocus(val.first));
+            if (locus.empty()) continue;
+            iterationCleaned += locus.cleanNode(getMinMergeEdgeCount(), val.second);
+            if (locus.empty()) _emptyLoci.insert(locus.getIndex());
 
 #ifdef DEBUG_SVL
-        log_os << "cleanRegion intersect: " << val << " is_empty_after_clean: " << locus.empty() << "\n";
+            log_os << "cleanRegion intersect: " << val << " is_empty_after_clean: " << locus.empty() << "\n";
 #endif
+        }
+
+        _totalCleaned += iterationCleaned;
+        if(0 == iterationCleaned) break;
     }
 }
 
