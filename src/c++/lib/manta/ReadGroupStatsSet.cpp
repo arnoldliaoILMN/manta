@@ -32,11 +32,10 @@ const unsigned HEAD_NAME_IDX = 2;
 const unsigned STAT_SOURCE_IDX             = 0;
 const unsigned STAT_INS_SIZE_SD_IDX        = 1;
 const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 2;
-
 const unsigned STAT_REL_ORIENT_IDX         = 3;
 
 
-
+//TODO: implement deserizlize from file
 void
 ReadGroupStatsSet::
 read(const char* filename)
@@ -47,8 +46,6 @@ read(const char* filename)
     open_ifstream(ifs,filename);
     this->read(ifs);
 }
-
-
 
 void
 ReadGroupStatsSet::
@@ -91,8 +88,8 @@ read(std::istream& is)
             exit(EXIT_FAILURE);
         }
 
-        const ReadGroupStats rps(data);
-        setStats(gmap[key],rps);
+        //const ReadGroupStats rps(data);
+        //setStats(gmap[key],rps);
     }
 }
 
@@ -109,7 +106,7 @@ write(std::ostream& os) const
     }
     // write column header for better readability
     os << "#\tindex"
-       << "\tsdInsSize\tmedianInsSize"
+       << "\tsample-count\tnumber-of-fragment-sizes"
        << "\treadOrientation"
        << '\n';
 

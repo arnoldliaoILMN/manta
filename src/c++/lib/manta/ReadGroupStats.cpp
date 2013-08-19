@@ -18,60 +18,68 @@
 #include "blt_util/log.hh"
 #include "blt_util/parse_util.hh"
 
-#include <boost/math/distributions/normal.hpp>
+#include <boost/foreach.hpp>
 
 #include <cmath>
-
-#include <iostream>
+#include <algorithm>
 #include <vector>
+#include <iostream>
 
 //#define DEBUG_RPS
-
-
-// Stats file data format
-const unsigned HEAD_FILL_IDX = 0;
-const unsigned HEAD_SRC_IDX  = 1;
-const unsigned HEAD_NAME_IDX = 2;
-
-// Stats file data format
-const unsigned STAT_SOURCE_IDX             = 0;
-const unsigned STAT_INS_SIZE_SD_IDX        = 1;
-const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 2;
-
-const unsigned STAT_REL_ORIENT_IDX         = 3;
-
 
 /* ----- ----- ----- ----- ----- -----
  *
  * ----- Auxiliary functions     -----
  *
  * ----- ----- ----- ----- ----- ----- */
-
+static
+void
+writeFragSizeHashItem(std::ostream& os, PairStatSet::hash_map_fragment fragmentSizeHash, int k)
+{
+	os << k << " -> <"
+	   << fragmentSizeHash.at(k).first
+	   << ", "
+	   << fragmentSizeHash.at(k).second
+	   << ">\n";
+}
 
 
 static
-bool
-calcStats(std::vector<int32_t>& data,
-          PairStatSet& stats)
+void
+populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
+		          	 std::vector<int> fragmentSizes,
+		          	 int numOfFragSize, int totalCount,
+		          	 int quantileNum, float* quantiles)
 {
+	int fillBase = 0;
+	int cumulative = 0;
+	for(int s=0; s<numOfFragSize; s++)
+	{	int fs = fragmentSizes[s];
+		int count = fragmentSizeHash.at(fs).first;
+		float freq = count / (float)totalCount;
 
-    const unsigned n(data.size());
-    if (n == 0)
-    {
-        stats.clear();
-        return false;
-    }
+		// debug...
+		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
 
-    // First we'll sort to calculate the median
-    sort(data.begin(), data.end());
-    stats.median=(data[(uint32_t)(n * 0.5)]);
+		cumulative += freq;
+		// update the hash map with cdf
+		fragmentSizeHash[fs] = std::make_pair(count, cumulative);
 
-    // this is iqr, but we call it sd:
-    stats.sd=(data[(uint32_t)(n * 0.75)] - data[(uint32_t)(n * 0.25)]);
+		// debug...
+		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
 
-    return true;
+		int fillNext = rint(cumulative * quantileNum);
+		for (int q = fillBase; q < fillNext; q++)
+			quantiles[q] = fs;
+		fillBase = fillNext;
+
+	  	// debug...
+		std::cerr << fs << ": "
+				  << fillBase << "\t"
+				  << fillNext << "\n";
+	}
+
 }
-
 
 
 static
@@ -79,12 +87,38 @@ bool
 isStatSetMatch(const PairStatSet& a,
                const PairStatSet& b)
 {
-
     static const double statsPrecision(0.005);
 
-    if (std::abs(a.median-b.median)>=statsPrecision) return false;
-    if (std::abs(a.sd-b.sd)>=statsPrecision) return false;
+    for (int i=0; i<PairStatSet::quantileNum; i++)
+    {
+    	if (std::abs(a.quantiles[i]-b.quantiles[i])>=statsPrecision)
+    		return false;
+    }
+
     return true;
+}
+
+static
+int
+binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
+{
+	int ret = -1;
+
+	int lowIx = -1;
+	int highIx = vectorLen - 1;
+	while (lowIx + 1 < highIx)
+	{
+		int midIx = (highIx + lowIx) / 2;
+		if (sortedVec[midIx] > value)
+			highIx = midIx;
+		else
+			lowIx = midIx;
+	}
+
+	if (value >= sortedVec[lowIx])
+		ret = sortedVec[lowIx];
+
+	return ret;
 }
 
 
@@ -117,30 +151,83 @@ getRelOrient(const bam_record& br)
 /* ----- ----- ----- ----- ----- -----
  * ----- PairStatSet  -----
  * ----- ----- ----- ----- ----- ----- */
-double
+bool
 PairStatSet::
-quantile(const double p) const
+calcStats()
 {
+	// calculate statistics from hashed insert sizes
+    numOfFragSize = fragmentSizeHash.size();
+    if (numOfFragSize == 0)
+        return false;
 
-    // put in hack temporary implementation:
-    boost::math::normal dist(median,sd);
-    return boost::math::quantile(dist, p);
+    BOOST_FOREACH (hash_map_fragment::value_type& hashItem, fragmentSizeHash)
+    	fragmentSizes.push_back(hashItem.first);
+    // sort all insert sizes
+    std::sort(fragmentSizes.begin(), fragmentSizes.end());
+
+    // populate the array of quantiles
+    populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
+    		          	 totalCount, quantileNum, quantiles);
+
+    return true;
 }
 
-double
-PairStatSet::
-cdf(const double x) const
-{
 
-    // put in hack temporary implementation:
-    boost::math::normal dist(median,sd);
-    return boost::math::cdf(dist, x);
+
+float
+PairStatSet::
+quantile(const float p) const
+{
+	int insertSize = 0;
+
+	int bin = rint(p * quantileNum) - 1;
+	if ((bin >= 0) && (bin < quantileNum))
+		insertSize = quantiles[bin];
+
+	return insertSize;
+}
+
+float
+PairStatSet::
+cdf(const int fs) const
+{
+	float cumProb = 0;
+
+	if (fragmentSizeHash.find(fs) == fragmentSizeHash.end())
+		cumProb = fragmentSizeHash.at(fs).second;
+	else
+	{
+		int estimated = binarySearch(numOfFragSize, fragmentSizes, fs);
+		if (estimated > -1)
+			cumProb = fragmentSizeHash.at(estimated).second;
+	}
+
+	return cumProb;
 }
 
 std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss)
 {
-    os << pss.sd << '\t' << pss.median;
+    os << pss.totalCount << '\t'
+       << pss.numOfFragSize;
+
+    // testing...
+    os << "cdf(0)=" << pss.cdf(0)<<"\n"
+       << "cdf(100)=" << pss.cdf(100)<<"\n"
+       << "cdf(150)=" << pss.cdf(150)<<"\n"
+       << "cdf(200)=" << pss.cdf(200)<<"\n"
+       << "cdf(250)=" << pss.cdf(250)<<"\n";
+
+    os << "quantile(0.12)=" << pss.quantile(0.12)<<"\n"
+       << "quantile(0.1201)=" << pss.quantile(0.1201)<<"\n"
+       << "quantile(0.1205)=" << pss.quantile(0.1205)<<"\n"
+       << "quantile(0.5)=" << pss.quantile(0.5)<<"\n"
+       << "quantile(0.5001)=" << pss.quantile(0.5001)<<"\n"
+       << "quantile(0.5006)=" << pss.quantile(0.5006)<<"\n"
+       << "quantile(0.99)=" << pss.quantile(0.99)<<"\n"
+       << "quantile(0.9991)=" << pss.quantile(0.9991)<<"\n"
+       << "quantile(0.9998)=" << pss.quantile(0.9998)<<"\n";
+
     return os;
 }
 
@@ -150,21 +237,6 @@ operator<<(std::ostream& os, const PairStatSet& pss)
  * ----- ReadPairStats  -----
  *
  * ----- ----- ----- ----- ----- ----- */
-
-ReadGroupStats::
-ReadGroupStats(const std::vector<std::string>& data)
-{
-
-    using namespace illumina::blt_util;
-
-    // Initialize data
-    fragSize.sd = parse_double_str(data[STAT_INS_SIZE_SD_IDX]);
-    fragSize.median = parse_double_str(data[STAT_INS_SIZE_MEDIAN_IDX]);
-
-    relOrients.setVal(PAIR_ORIENT::get_index(data[STAT_REL_ORIENT_IDX].c_str()));
-}
-
-
 
 // set read pair statistics from a bam reader object:
 //
@@ -188,15 +260,14 @@ ReadGroupStats(const std::string& statsBamFile)
 
     bool isConverged(false);
     bool isStopEstimation(false);
+    bool isFirstEstimation(true);
+    PairStatSet oldFragSize;
+
     unsigned recordCnts(0);
-
     unsigned posCount(0);
-
     bool isPairTypeSet(false);
-
-    PairStatsData psd;
-
     bool isActiveChrom(true);
+
     while (isActiveChrom && (!isStopEstimation))
     {
         isActiveChrom=false;
@@ -248,7 +319,20 @@ ReadGroupStats(const std::string& statsBamFile)
                     isPairTypeSet=true;
                 }
 
-                psd.fragmentLengths.push_back(std::abs(al.template_size()));
+                // !!!debug
+
+
+                fragSize.totalCount++;
+                int currFragSize = std::abs(al.template_size());
+                if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
+                	// initialize the count
+                	fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
+                else
+                	// increase the count
+                	fragSize.fragmentSizeHash.at(currFragSize).first++;
+
+                // !!!debug
+
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
@@ -259,56 +343,47 @@ ReadGroupStats(const std::string& statsBamFile)
                 log_os << "\n";
 #endif
 
-                isConverged=computePairStats(psd);
-                if (isConverged || (recordCnts>5000000)) isStopEstimation=true;
+                fragSize.calcStats();
+                // check convergence
+                if (isFirstEstimation)
+                	isFirstEstimation = false;
+                else
+                	isConverged=isStatSetMatch(oldFragSize, fragSize);
+
+                oldFragSize = fragSize;
+
+                if (isConverged || (recordCnts>5000000))
+                	isStopEstimation=true;
+
+                // break from reading the current chromosome
                 break;
             }
         }
     }
 
-    if (! isConverged)
+    if (!isConverged)
     {
-        if (psd.fragmentLengths.size()<1000)
+        if (fragSize.totalCount <1000)
         {
             log_os << "ERROR: Can't generate pair statistics for BAM file " << statsBamFile << "\n";
-            log_os << "\tTotal observed read pairs: " << psd.fragmentLengths.size() << "\n";
+            log_os << "\tTotal observed read pairs: " << fragSize.totalCount << "\n";
             exit(EXIT_FAILURE);
         }
-        isConverged=computePairStats(psd);
-    }
-    if (! isConverged)
-    {
-        log_os << "WARNING: read pair statistics did not converge\n";
-
-        // make sure stats are estimated for all values if we're going to continue:
-        computePairStats(psd,true);
-    }
-}
-
-
-
-bool
-ReadGroupStats::
-computePairStats(PairStatsData& psd, const bool isForcedConvergence)
-{
-
-    // Calculate new median and sd
-    PairStatSet newVals;
-    const bool calcStatus(calcStats(psd.fragmentLengths, newVals));
-    if (! isForcedConvergence)
-    {
-        if (! calcStatus) return false;
-
-        if (! isStatSetMatch(fragSize,newVals))
+        else if((recordCnts % statsCheckCnt) != 0)
         {
-            fragSize = newVals;
-            return false;
+        	// caculate for
+        	fragSize.calcStats();
+        	// check convergence
+        	if (isFirstEstimation)
+        		isFirstEstimation = false;
+        	else
+        	   	isConverged=isStatSetMatch(oldFragSize, fragSize);
         }
+
+        if (!isConverged)
+        	log_os << "WARNING: read pair statistics did not converge\n";
     }
-
-    return true;
 }
-
 
 
 void

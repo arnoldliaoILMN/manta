@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 
+#include "boost/unordered_map.hpp"
 #include "boost/optional.hpp"
 
 
@@ -29,40 +30,42 @@ struct PairStatSet
 {
     PairStatSet()
     {
-        clear();
+    	totalCount = 0;
+    	numOfFragSize = 0;
     }
 
+    int totalCount;
+    int numOfFragSize;
+    std::vector<int> fragmentSizes;
+
+    static const int quantileNum = 1000;
+    float quantiles[quantileNum];
+
+    typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;
+    hash_map_fragment fragmentSizeHash;
+
+
+    bool
+        calcStats();
     ///
     /// const interface used by variant callers:
     ///
-
     // return value for which we observe value or less with prob p
     // (not sure what the exact way to phrase this is for the discrete case)
-    double
-    quantile(const double p) const;
+    float
+    quantile(const float p) const;
 
     // cdf(x)
-    double
-    cdf(const double x) const;
+    float
+    cdf(const int x) const;
+
+private:
 
 
-    ///
-    /// remainder of interface for estimation, store/read from disk
-    ///
-    void clear()
-    {
-        median = 0.;
-        sd = 0.;
-    }
-
-    /// TODO: hide implementation details, better estimate:
-    double median;
-    double sd;
 };
 
 std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss);
-
 
 
 // Read pair insert stats can be computed for each sample or read group, this
@@ -73,17 +76,17 @@ struct ReadGroupStats
 
     ReadGroupStats() {}
     ReadGroupStats(const std::string& statsBamFile);
-    ReadGroupStats(const std::vector<std::string>& data);
 
     void
     write(std::ostream& os) const;
 
 private:
     // These data are used temporarily during ReadPairStats estimation
-    struct PairStatsData
-    {
+    /*
+    struct PairStatsData {
         std::vector<int32_t> fragmentLengths;
     };
+    */
 
     /// If PairStats has converged (or if isForcedConvergence is true)
     /// 1. All stats are computed
@@ -93,7 +96,9 @@ private:
     /// 1. only insert stats are computed
     /// 2. return false
     ///
-    bool computePairStats(PairStatsData& psd, const bool isForcedConvergence = false);
+
+    bool computePairStats(std::string& statsBamFile,
+    		              const bool isForcedConvergence = false);
 
 public:
     //////////////// data:
