@@ -171,7 +171,7 @@ calcStats()
     std::sort(fragmentSizes.begin(), fragmentSizes.end());
 #ifdef DEBUG_RPS
     std::cerr<<"fragment sizes: <";
-    BOOST_FOREACH(std::vector<int> s, fragmentSizes)
+    BOOST_FOREACH(int s, fragmentSizes)
     	std::cerr << s << ",";
     std::cerr<<">\n";
 #endif
