@@ -159,6 +159,9 @@ calcStats()
 {
 	// calculate statistics from hashed insert sizes
     numOfFragSize = fragmentSizeHash.size();
+#ifdef DEBUG_RPS
+    std::cerr<<"numOfFragSize="<<numOfFragSize<<"\n";
+#endif
     if (numOfFragSize == 0)
         return false;
 
@@ -166,7 +169,12 @@ calcStats()
     	fragmentSizes.push_back(hashItem.first);
     // sort all insert sizes
     std::sort(fragmentSizes.begin(), fragmentSizes.end());
-
+#ifdef DEBUG_RPS
+    std::cerr<<"fragment sizes: <";
+    BOOST_FOREACH(std::vector<int> s, fragmentSizes)
+    	std::cerr << s << ",";
+    std::cerr<<">\n";
+#endif
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
     		          	 totalCount, quantileNum, quantiles);
