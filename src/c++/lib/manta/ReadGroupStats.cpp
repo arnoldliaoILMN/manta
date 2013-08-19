@@ -157,6 +157,9 @@ bool
 PairStatSet::
 calcStats()
 {
+#ifdef DEBUG_RPS
+    std::cerr<<"Calculating stats...\n";
+#endif
 	// calculate statistics from hashed insert sizes
     numOfFragSize = fragmentSizeHash.size();
 #ifdef DEBUG_RPS
@@ -360,6 +363,7 @@ ReadGroupStats(const std::string& statsBamFile)
                        << "INFO: Stats before convergence check: ";
                 write(log_os);
                 log_os << "\n";
+                std::cerr<<"Called stats calculation.\n";
 #endif
 
                 fragSize.calcStats();
