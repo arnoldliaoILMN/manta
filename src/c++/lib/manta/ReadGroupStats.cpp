@@ -25,7 +25,7 @@
 #include <vector>
 #include <iostream>
 
-//#define DEBUG_RPS
+#define DEBUG_RPS
 
 /* ----- ----- ----- ----- ----- -----
  *
@@ -58,25 +58,27 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 		int count = fragmentSizeHash.at(fs).first;
 		float freq = count / (float)totalCount;
 
-		// debug...
+#ifdef DEBUG_RPS
+		std::cerr << "freq=" << freq << "\n";
 		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
-
+#endif
 		cumulative += freq;
 		// update the hash map with cdf
 		fragmentSizeHash[fs] = std::make_pair(count, cumulative);
-
-		// debug...
+#ifdef DEBUG_RPS
 		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
+#endif
 
 		int fillNext = rint(cumulative * quantileNum);
 		for (int q = fillBase; q < fillNext; q++)
 			quantiles[q] = fs;
 		fillBase = fillNext;
 
-	  	// debug...
+#ifdef DEBUG_RPS
 		std::cerr << fs << ": "
 				  << fillBase << "\t"
 				  << fillNext << "\n";
+#endif
 	}
 
 }
@@ -319,11 +321,19 @@ ReadGroupStats(const std::string& statsBamFile)
                     isPairTypeSet=true;
                 }
 
-                // !!!debug
-
+                int currFragSize = std::abs(al.template_size());
+#ifdef DEBUG_RPS
+                std::cerr << "current fragment size = " << currFragSize << "\n";
+                if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
+                	std::cerr << "no entry in the hash.\n";
+                else
+                	writeFragSizeHashItem(std::cerr,
+                			              fragSize.fragmentSizeHash,
+                			              currFragSize);
+#endif
 
                 fragSize.totalCount++;
-                int currFragSize = std::abs(al.template_size());
+
                 if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
                 	// initialize the count
                 	fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
@@ -331,8 +341,9 @@ ReadGroupStats(const std::string& statsBamFile)
                 	// increase the count
                 	fragSize.fragmentSizeHash.at(currFragSize).first++;
 
-                // !!!debug
-
+#ifdef DEBUG_RPS
+                writeFragSizeHashItem(std::cerr, fragSize.fragmentSizeHash, currFragSize);
+#endif
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
