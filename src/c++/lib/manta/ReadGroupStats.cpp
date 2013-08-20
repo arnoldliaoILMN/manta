@@ -188,11 +188,6 @@ calcStats()
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
     		          	 totalCount, quantileNum, quantiles);
-#ifdef DEBUG_RPS
-		for (int q=0; q<1000; q++)
-			std::cerr << "qunatiles[" << q << "] = "
-			          << quantiles[q] << "\n";
-#endif
 
 
     return true;
