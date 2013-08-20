@@ -78,7 +78,7 @@ isStatSetMatch(const PairStatSet& pss1,
     static const double statsPrecision(0.005);
 
     float p = 0.05;
-    float delta = 0.1;
+    float delta = 0.05;
     while (p < 1)
     {
     	// check if percentile values equal
