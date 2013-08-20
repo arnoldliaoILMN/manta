@@ -58,28 +58,15 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 		int count = fragmentSizeHash.at(fs).first;
 		float freq = count / (float)totalCount;
 
-#ifdef DEBUG_RPS
-		std::cerr << "freq=" << freq << "\n";
-		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
-#endif
 		cumulative += freq;
 		// update the hash map with cdf
 		fragmentSizeHash[fs].second = cumulative;
-#ifdef DEBUG_RPS
-		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
-#endif
 
 		int fillNext = rint(cumulative * quantileNum);
-#ifdef DEBUG_RPS
-		std::cerr << fs << ": "
-				  << fillBase << "\t"
-				  << fillNext << "\n";
-#endif
 		for (int q = fillBase; q < fillNext; q++)
 			quantiles[q] = fs;
 		fillBase = fillNext;
 	}
-
 }
 
 
@@ -88,9 +75,10 @@ bool
 isStatSetMatch(const PairStatSet& a,
                const PairStatSet& b)
 {
-    static const double statsPrecision(0.005);
+    //static const double statsPrecision(0.005);
+	static const double statsPrecision(0.5);
 
-    for (int i=0; i<PairStatSet::quantileNum; i++)
+    for (int i=498; i<501; i++)
     {
     	if (std::abs(a.quantiles[i]-b.quantiles[i])>=statsPrecision)
     		return false;
@@ -105,7 +93,7 @@ binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 {
 	int ret = -1;
 
-	int lowIx = -1;
+	int lowIx = 0;
 	int highIx = vectorLen - 1;
 	while (lowIx + 1 < highIx)
 	{
@@ -118,6 +106,14 @@ binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 
 	if (value >= sortedVec[lowIx])
 		ret = sortedVec[lowIx];
+
+#ifdef DEBUG_RPS
+		std::cerr << 'binary search ';
+		for (int q=0; q<1000; q++)
+			std::cerr << "value=" << value << "\t"
+			          << "estimated=" << ret <<"\n";
+#endif
+
 
 	return ret;
 }
@@ -183,6 +179,13 @@ calcStats()
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
     		          	 totalCount, quantileNum, quantiles);
+#ifdef DEBUG_RPS
+		std::cerr << 'quantiles: \n';
+		for (int q=0; q<1000; q++)
+			std::cerr << "qunatiles[" << q << "] = "
+			          << quantiles[q] << "\n";
+#endif
+
 
     return true;
 }
@@ -334,19 +337,8 @@ ReadGroupStats(const std::string& statsBamFile)
                     isPairTypeSet=true;
                 }
 
-                int currFragSize = std::abs(al.template_size());
-#ifdef DEBUG_RPS
-                std::cerr << "current fragment size = " << currFragSize << "\n";
-                if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
-                	std::cerr << "no entry in the hash.\n";
-                else
-                	writeFragSizeHashItem(std::cerr,
-                			              fragSize.fragmentSizeHash,
-                			              currFragSize);
-#endif
-
                 fragSize.totalCount++;
-
+                int currFragSize = std::abs(al.template_size());
                 if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
                 	// initialize the count
                 	fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
@@ -354,20 +346,13 @@ ReadGroupStats(const std::string& statsBamFile)
                 	// increase the count
                 	fragSize.fragmentSizeHash.at(currFragSize).first++;
 
-#ifdef DEBUG_RPS
-                writeFragSizeHashItem(std::cerr, fragSize.fragmentSizeHash, currFragSize);
-#endif
-
                 if ((recordCnts % statsCheckCnt) != 0) continue;
-
-                std::cerr<<"To call stats calculation...\n";
 
 #ifdef DEBUG_RPS
                 log_os << "INFO: Checking stats convergence at record count : " << recordCnts << "'\n"
                        << "INFO: Stats before convergence check: ";
                 //write(log_os);
                 log_os << "\n";
-                std::cerr<<"Called stats calculation.\n";
 #endif
 
                 fragSize.calcStats();
