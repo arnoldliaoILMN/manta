@@ -366,7 +366,6 @@ ReadGroupStats(const std::string& statsBamFile)
                 //write(log_os);
                 log_os << "\n";
                 std::cerr<<"Called stats calculation.\n";
-                sleep(1000);
 #endif
 
                 fragSize.calcStats();
