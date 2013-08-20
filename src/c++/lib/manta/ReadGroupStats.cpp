@@ -229,14 +229,20 @@ std::ostream&
 operator<<(std::ostream& os, const PairStatSet& pss)
 {
     os << pss.totalCount << '\t'
-       << pss.numOfFragSize;
+       << pss.numOfFragSize << '\n';
 
     // testing...
     os << "cdf(0)=" << pss.cdf(0)<<"\n"
        << "cdf(100)=" << pss.cdf(100)<<"\n"
-       << "cdf(150)=" << pss.cdf(150)<<"\n"
        << "cdf(200)=" << pss.cdf(200)<<"\n"
-       << "cdf(250)=" << pss.cdf(250)<<"\n";
+       << "cdf(300)=" << pss.cdf(300)<<"\n"
+       << "cdf(400)=" << pss.cdf(400)<<"\n"
+       << "cdf(500)=" << pss.cdf(500)<<"\n"
+       << "cdf(600)=" << pss.cdf(600)<<"\n"
+       << "cdf(700)=" << pss.cdf(700)<<"\n"
+       << "cdf(800)=" << pss.cdf(800)<<"\n"
+       << "cdf(900)=" << pss.cdf(900)<<"\n"
+       << "cdf(1000)=" << pss.cdf(1000)<<"\n";
 
     os << "quantile(0.12)=" << pss.quantile(0.12)<<"\n"
        << "quantile(0.1201)=" << pss.quantile(0.1201)<<"\n"
@@ -404,7 +410,7 @@ void
 ReadGroupStats::
 write(std::ostream& os) const
 {
-    os << fragSize << "\t"
-       << relOrients;
+    os << relOrients << "\t"
+       << fragSize;
 }
 

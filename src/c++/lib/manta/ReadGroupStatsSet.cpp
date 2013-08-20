@@ -105,9 +105,9 @@ write(std::ostream& os) const
         os << "# Bam_Path\t" << i << "\t" << _group.get_key(i) << '\n';
     }
     // write column header for better readability
-    os << "#\tindex"
-       << "\tsample-count\tnumber-of-fragment-sizes"
+    os << "# index"
        << "\treadOrientation"
+       << "\tsample-count\tnumber-of-fragment-sizes"
        << '\n';
 
     for (unsigned i(0); i<n_groups; ++i)
