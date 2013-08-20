@@ -52,7 +52,7 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 		          	 int quantileNum, float* quantiles)
 {
 	int fillBase = 0;
-	int cumulative = 0;
+	float cumulative = 0;
 	for(int s=0; s<numOfFragSize; s++)
 	{	int fs = fragmentSizes[s];
 		int count = fragmentSizeHash.at(fs).first;
@@ -64,7 +64,7 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 #endif
 		cumulative += freq;
 		// update the hash map with cdf
-		fragmentSizeHash[fs] = std::make_pair(count, cumulative);
+		fragmentSizeHash[fs].second = cumulative;
 #ifdef DEBUG_RPS
 		writeFragSizeHashItem(std::cerr, fragmentSizeHash, fs);
 #endif
