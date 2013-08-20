@@ -75,8 +75,7 @@ bool
 isStatSetMatch(const PairStatSet& pss1,
                const PairStatSet& pss2)
 {
-    //static const double statsPrecision(0.005);
-	static const double statsPrecision(0.5);
+    static const double statsPrecision(0.005);
 
 	// check if median values equal
 	int b = 0.5 * pss2.quantileNum - 1;
