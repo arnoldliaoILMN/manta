@@ -70,15 +70,14 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 #endif
 
 		int fillNext = rint(cumulative * quantileNum);
-		for (int q = fillBase; q < fillNext; q++)
-			quantiles[q] = fs;
-		fillBase = fillNext;
-
 #ifdef DEBUG_RPS
 		std::cerr << fs << ": "
 				  << fillBase << "\t"
 				  << fillNext << "\n";
 #endif
+		for (int q = fillBase; q < fillNext; q++)
+			quantiles[q] = fs;
+		fillBase = fillNext;
 	}
 
 }
@@ -168,6 +167,9 @@ calcStats()
     if (numOfFragSize == 0)
         return false;
 
+    // clean the vector
+    fragmentSizes.clear();
+    // populate the vector of fragment sizes
     BOOST_FOREACH (hash_map_fragment::value_type& hashItem, fragmentSizeHash)
     	fragmentSizes.push_back(hashItem.first);
     // sort all insert sizes
