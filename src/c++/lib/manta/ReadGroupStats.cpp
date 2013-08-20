@@ -361,6 +361,8 @@ ReadGroupStats(const std::string& statsBamFile)
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
+                std::cerr<<"To call stats calculation...\n";
+
 #ifdef DEBUG_RPS
                 log_os << "INFO: Checking stats convergence at record count : " << recordCnts << "'\n"
                        << "INFO: Stats before convergence check: ";
