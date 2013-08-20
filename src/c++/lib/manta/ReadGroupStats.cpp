@@ -209,7 +209,7 @@ cdf(const int fs) const
 {
 	float cumProb = 0;
 
-	if (fragmentSizeHash.find(fs) == fragmentSizeHash.end())
+	if (fragmentSizeHash.find(fs) != fragmentSizeHash.end())
 		cumProb = fragmentSizeHash.at(fs).second;
 	else
 	{
