@@ -77,11 +77,12 @@ isStatSetMatch(const PairStatSet& pss1,
 {
     static const double statsPrecision(0.005);
 
-    float checkpoints[5] = {0.1, 0.25, 0.5, 0.75, 0.9};
-    for (int i=0; i<5; i++)
+    float p = 0.05;
+    float delta = 0.1;
+    while (p < 1)
     {
     	// check if percentile values equal
-    	int b = checkpoints[i] * pss2.quantileNum - 1;
+    	int b = p * pss2.quantileNum - 1;
     	if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
     		return false;
 
@@ -89,6 +90,8 @@ isStatSetMatch(const PairStatSet& pss1,
     	int medFragSize = pss2.quantiles[b];
     	if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
     		return false;
+
+    	p += delta;
     }
 
     return true;
