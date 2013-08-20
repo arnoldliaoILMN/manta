@@ -245,8 +245,8 @@ operator<<(std::ostream& os, const PairStatSet& pss)
 
     os << "binary search 30: "
        << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 30) << "\n"
-       << "binary search 2130: "
-       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 2130) << "\n"
+       << "binary search 2135: "
+       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 2135) << "\n"
        << "binary search 45050: "
        << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 45050) << "\n";
 
