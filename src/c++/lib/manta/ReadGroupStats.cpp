@@ -159,11 +159,13 @@ calcStats()
 {
 #ifdef DEBUG_RPS
     std::cerr<<"Calculating stats...\n";
+    sleep(1000);
 #endif
 	// calculate statistics from hashed insert sizes
     numOfFragSize = fragmentSizeHash.size();
 #ifdef DEBUG_RPS
     std::cerr<<"numOfFragSize="<<numOfFragSize<<"\n";
+    sleep(1000);
 #endif
     if (numOfFragSize == 0)
         return false;
@@ -177,6 +179,7 @@ calcStats()
     BOOST_FOREACH(int s, fragmentSizes)
     	std::cerr << s << ",";
     std::cerr<<">\n";
+    sleep(1000);
 #endif
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
@@ -364,6 +367,7 @@ ReadGroupStats(const std::string& statsBamFile)
                 write(log_os);
                 log_os << "\n";
                 std::cerr<<"Called stats calculation.\n";
+                sleep(1000);
 #endif
 
                 fragSize.calcStats();
