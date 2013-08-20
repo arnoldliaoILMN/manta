@@ -104,7 +104,7 @@ binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 	int ret = -1;
 
 	int lowIx = 0;
-	int highIx = vectorLen - 1;
+	int highIx = vectorLen;
 	while (lowIx + 1 < highIx)
 	{
 		int midIx = (highIx + lowIx) / 2;
@@ -116,13 +116,6 @@ binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 
 	if (value >= sortedVec[lowIx])
 		ret = sortedVec[lowIx];
-
-#ifdef DEBUG_RPS
-		std::cerr << "binary search ";
-		std::cerr << "value=" << value << "\t"
-				  << "estimated=" << ret <<"\n";
-#endif
-
 
 	return ret;
 }
@@ -179,12 +172,7 @@ calcStats()
     	fragmentSizes.push_back(hashItem.first);
     // sort all insert sizes
     std::sort(fragmentSizes.begin(), fragmentSizes.end());
-#ifdef DEBUG_RPS
-    std::cerr<<"fragment sizes: <";
-    BOOST_FOREACH(int s, fragmentSizes)
-    	std::cerr << s << ",";
-    std::cerr<<">\n";
-#endif
+
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
     		          	 totalCount, quantileNum, quantiles);
@@ -254,6 +242,13 @@ operator<<(std::ostream& os, const PairStatSet& pss)
        << "quantile(0.99)=" << pss.quantile(0.99)<<"\n"
        << "quantile(0.9991)=" << pss.quantile(0.9991)<<"\n"
        << "quantile(0.9998)=" << pss.quantile(0.9998)<<"\n";
+
+    os << "binary search 30: "
+       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 30) << "\n"
+       << "binary search 2132: "
+       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 2132) << "\n"
+       << "binary search 45050: "
+       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 45050) << "\n";
 
     return os;
 }
