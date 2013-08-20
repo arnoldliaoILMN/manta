@@ -52,7 +52,7 @@ struct PairStatSet
     ///
     // return value for which we observe value or less with prob p
     // (not sure what the exact way to phrase this is for the discrete case)
-    float
+    int
     quantile(const float p) const;
 
     // cdf(x)

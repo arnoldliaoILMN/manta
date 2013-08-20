@@ -72,17 +72,21 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 
 static
 bool
-isStatSetMatch(const PairStatSet& a,
-               const PairStatSet& b)
+isStatSetMatch(const PairStatSet& pss1,
+               const PairStatSet& pss2)
 {
     //static const double statsPrecision(0.005);
 	static const double statsPrecision(0.5);
 
-    for (int i=498; i<501; i++)
-    {
-    	if (std::abs(a.quantiles[i]-b.quantiles[i])>=statsPrecision)
-    		return false;
-    }
+	// check if median values equal
+	int b = 0.5 * pss2.quantileNum - 1;
+	if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
+		return false;
+
+    // check the convergence of cdf of the median value
+    int medFragSize = pss2.quantiles[b];
+    if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
+    	return false;
 
     return true;
 }
@@ -108,10 +112,9 @@ binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 		ret = sortedVec[lowIx];
 
 #ifdef DEBUG_RPS
-		std::cerr << 'binary search ';
-		for (int q=0; q<1000; q++)
-			std::cerr << "value=" << value << "\t"
-			          << "estimated=" << ret <<"\n";
+		std::cerr << "binary search ";
+		std::cerr << "value=" << value << "\t"
+				  << "estimated=" << ret <<"\n";
 #endif
 
 
@@ -180,7 +183,6 @@ calcStats()
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
     		          	 totalCount, quantileNum, quantiles);
 #ifdef DEBUG_RPS
-		std::cerr << 'quantiles: \n';
 		for (int q=0; q<1000; q++)
 			std::cerr << "qunatiles[" << q << "] = "
 			          << quantiles[q] << "\n";
@@ -192,7 +194,7 @@ calcStats()
 
 
 
-float
+int
 PairStatSet::
 quantile(const float p) const
 {
