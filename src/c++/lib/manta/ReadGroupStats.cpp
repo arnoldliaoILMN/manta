@@ -77,15 +77,19 @@ isStatSetMatch(const PairStatSet& pss1,
 {
     static const double statsPrecision(0.005);
 
-	// check if median values equal
-	int b = 0.5 * pss2.quantileNum - 1;
-	if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
-		return false;
+    float checkpoints[3] = {0.25, 0.5, 0.75};
+    for (int i=0; i<3; i++)
+    {
+    	// check if percentile values equal
+    	int b = checkpoints[i] * pss2.quantileNum - 1;
+    	if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
+    		return false;
 
-    // check the convergence of cdf of the median value
-    int medFragSize = pss2.quantiles[b];
-    if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
-    	return false;
+    	// check the convergence of cdf of the median value
+    	int medFragSize = pss2.quantiles[b];
+    	if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
+    		return false;
+    }
 
     return true;
 }
