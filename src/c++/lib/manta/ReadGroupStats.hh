@@ -61,21 +61,6 @@ struct PairStatSet
     float
     cdf(const int x) const;
 
-private:
-    friend class boost::serialization::access;
-        // When the class Archive corresponds to an output archive, the
-        // & operator is defined similar to <<.  Likewise, when the class Archive
-        // is a type of input archive the & operator is defined similar to >>.
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-    	ar & totalCount;
-    	ar & numOfFragSize;
-    	ar & fragmentSizes;
-    	ar & quantileNum;
-    	ar & quantiles;
-    	ar & fragmentSizeHash;
-    }
 };
 
 std::ostream&
@@ -90,6 +75,10 @@ struct ReadGroupStats
 
     ReadGroupStats() {}
     ReadGroupStats(const std::string& statsBamFile);
+
+public:
+    PairStatSet fragSize;
+    ReadPairOrient relOrients;
 
     void
     write(std::ostream& os) const;
@@ -114,10 +103,25 @@ private:
     bool computePairStats(std::string& statsBamFile,
     		              const bool isForcedConvergence = false);
 
-public:
-    //////////////// data:
-    ReadPairOrient relOrients;
+    friend class boost::serialization::access;
+            // When the class Archive corresponds to an output archive, the
+            // & operator is defined similar to <<.  Likewise, when the class Archive
+            // is a type of input archive the & operator is defined similar to >>.
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version)
+        {
+        	ar & fragSize;
+        	ar & relOrients;
+        	/*
+        	ar & totalCount;
+        	ar & numOfFragSize;
+        	ar & fragmentSizes;
+        	ar & quantileNum;
+        	ar & quantiles;
+        	ar & fragmentSizeHash;
+        	*/
+        }
 
-    PairStatSet fragSize;
+
 };
 
