@@ -220,6 +220,7 @@ operator<<(std::ostream& os, const PairStatSet& pss)
     os << pss.totalCount << '\t'
        << pss.numOfFragSize << '\n';
 
+#ifdef DEBUG_RPS
     // testing...
     os << "cdf(0)=" << pss.cdf(0)<<"\n"
        << "cdf(100)=" << pss.cdf(100)<<"\n"
@@ -242,13 +243,7 @@ operator<<(std::ostream& os, const PairStatSet& pss)
        << "quantile(0.99)=" << pss.quantile(0.99)<<"\n"
        << "quantile(0.9991)=" << pss.quantile(0.9991)<<"\n"
        << "quantile(0.9998)=" << pss.quantile(0.9998)<<"\n";
-
-    os << "binary search 30: "
-       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 30) << "\n"
-       << "binary search 2135: "
-       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 2135) << "\n"
-       << "binary search 45050: "
-       << binarySearch(pss.numOfFragSize, pss.fragmentSizes, 45050) << "\n";
+#endif
 
     return os;
 }

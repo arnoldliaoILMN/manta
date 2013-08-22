@@ -22,75 +22,11 @@
 #include <iostream>
 
 
-
-// Stats file data format
-const unsigned HEAD_FILL_IDX = 0;
-const unsigned HEAD_SRC_IDX  = 1;
-const unsigned HEAD_NAME_IDX = 2;
-
-// Stats file data format
-const unsigned STAT_SOURCE_IDX             = 0;
-const unsigned STAT_INS_SIZE_SD_IDX        = 1;
-const unsigned STAT_INS_SIZE_MEDIAN_IDX    = 2;
-const unsigned STAT_REL_ORIENT_IDX         = 3;
-
-
-//TODO: implement deserizlize from file
 void
 ReadGroupStatsSet::
 read(const char* filename)
 {
-    assert(NULL != filename);
 
-    std::ifstream ifs;
-    open_ifstream(ifs,filename);
-    this->read(ifs);
-}
-
-void
-ReadGroupStatsSet::
-read(std::istream& is)
-{
-
-    using namespace illumina::blt_util;
-
-    clear();
-    std::map<int,std::string> gmap;
-
-    std::string line;
-    while (! is.eof())
-    {
-        std::getline(is, line);
-        if (line.length() == 0) continue;
-
-        std::vector<std::string> data;
-        split_string(line,'\t', data);
-        if (((data[0] == "#") && (data[1] == "index"))
-            || (data[0] == "# Bam_Size_To_Use")
-            || (data[0] == "# Bam_Orig_Path"))
-        {
-            continue;
-        }
-
-        if (data[0] == "# Bam_Path")
-        {
-            gmap[parse_int_str(data[HEAD_SRC_IDX])] = data[HEAD_NAME_IDX];
-            continue;
-        }
-        // Get key string
-        const int32_t key = parse_int_str(data[STAT_SOURCE_IDX]);
-
-        // Make sure we have a BAM file source mapping!
-        if (gmap.count(key) == 0)
-        {
-            log_os << "[ERROR]: While loading stats file unmapped data found for index: " << key
-                   << ", on line: " << line << '\n';
-            exit(EXIT_FAILURE);
-        }
-
-        //const ReadGroupStats rps(data);
-        //setStats(gmap[key],rps);
-    }
 }
 
 

@@ -66,9 +66,6 @@ struct ReadGroupStatsSet
     write(std::ostream& os) const;
 
     void
-    read(std::istream& os);
-
-    void
     read(const char* filename);
 
 private:

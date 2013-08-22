@@ -20,6 +20,8 @@
 #include "manta/ReadGroupStatsSet.hh"
 
 #include "boost/foreach.hpp"
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
 
 #include <cstdlib>
 
@@ -33,23 +35,39 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
 
     // instantiate early to test for filename/permissions problems
     OutStream outs(opt.outputFilename);
-
-    ReadGroupStatsSet rstats;
     if (opt.alignmentFilename.empty())
     {
         log_os << "ERROR: No input files specified.\n";
         exit(EXIT_FAILURE);
     }
 
+    ReadGroupStatsSet rstats;
+    // debug...
+    ReadGroupStatsSet rstatsDeserized;
+    char serizedStatsFile[] = "/home/xchen/projs/manta/results/stats/temp.stats";
 
     BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
     {
-        rstats.setStats(file,ReadGroupStats(file));
+        ReadGroupStats rgs = ReadGroupStats(file);
+    	rstats.setStats(file,rgs);
+
+    	// debug...
+    	std::ofstream outSerialized(serizedStatsFile);
+    	boost::archive::text_oarchive oa(outSerialized);
+    	oa << rgs;
+
+    	ReadGroupStats rgsNew;
+    	std::ifstream inSerialized(serizedStatsFile);
+    	boost::archive::text_iarchive ia(inSerialized);
+    	ia >> rgsNew;
+
+    	rstatsDeserized.setStats(file, rgsNew);
     }
 
     rstats.write(outs.getStream());
+    // debug...
+    rstatsDeserized.write(outs.getStream());
 }
-
 
 
 void
