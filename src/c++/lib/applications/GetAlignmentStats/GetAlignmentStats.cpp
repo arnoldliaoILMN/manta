@@ -49,7 +49,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
 
     BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
     {
-        const ReadGroupStats rgs = ReadGroupStats(file);
+        ReadGroupStats rgs = ReadGroupStats(file);
     	rstats.setStats(file,rgs);
 
     	// debug...
