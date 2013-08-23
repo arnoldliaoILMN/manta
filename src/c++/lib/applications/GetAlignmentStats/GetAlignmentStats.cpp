@@ -70,9 +70,9 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     			  << "\tquantileNum=" << rgsNew.fragSize.quantileNum;
     }
 
-    //rstats.write(outs.getStream());
+    rstats.write(outs.getStream());
     // debug...
-    rstatsDeserized.write(outs.getStream());
+    //rstatsDeserized.write(outs.getStream());
 
 }
 
