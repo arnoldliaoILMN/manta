@@ -54,7 +54,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     {
         ReadGroupStats rgs = ReadGroupStats(file);
     	rstats.setStats(file,rgs);
-
+/*
     	// debug...
     	std::ofstream outSerialized(serizedStatsFile);
     	boost::archive::text_oarchive oa(outSerialized);
@@ -66,11 +66,12 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	ia >> rgsNew;
 
     	rstatsDeserized.setStats(file, rgsNew);
+    	*/
     }
 
     rstats.write(outs.getStream());
     // debug...
-    rstatsDeserized.write(outs.getStream());
+    //rstatsDeserized.write(outs.getStream());
 
 }
 
