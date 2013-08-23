@@ -37,14 +37,13 @@ struct PairStatSet
     {
     	totalCount = 0;
     	numOfFragSize = 0;
-    	quantileNum = 1000;
     }
 
     int totalCount;
     int numOfFragSize;
     std::vector<int> fragmentSizes;
-    int quantileNum;
-    std::vector<float> quantiles;
+    static const int quantileNum = 1000;
+    float quantiles[quantileNum];
 
     //typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;
     typedef __gnu_cxx::hash_map <int, std::pair<int, float> > hash_map_fragment;
@@ -72,7 +71,6 @@ private:
     	ar & totalCount;
     	ar & numOfFragSize;
     	ar & fragmentSizes;
-    	ar & quantileNum;
     	ar & quantiles;
     	ar & fragmentSizeHash;
     }
