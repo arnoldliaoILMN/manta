@@ -49,7 +49,7 @@ void
 populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 		          	 std::vector<int> fragmentSizes,
 		          	 int numOfFragSize, int totalCount,
-		          	 int quantileNum, float* quantiles)
+		          	 int quantileNum, std::vector<float> quantiles)
 {
 	int fillBase = 0;
 	float cumulative = 0;
@@ -64,7 +64,7 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 
 		int fillNext = rint(cumulative * quantileNum);
 		for (int q = fillBase; q < fillNext; q++)
-			quantiles[q] = fs;
+			quantiles.push_back(fs);
 		fillBase = fillNext;
 	}
 }
