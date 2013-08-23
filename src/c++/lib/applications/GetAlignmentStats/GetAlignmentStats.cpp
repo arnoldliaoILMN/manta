@@ -58,7 +58,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	std::ofstream outSerialized(serizedStatsFile);
     	boost::archive::text_oarchive oa(outSerialized);
     	oa << rgs;
-
+/*
     	ReadGroupStats rgsNew;
     	std::ifstream inSerialized(serizedStatsFile);
     	boost::archive::text_iarchive ia(inSerialized);
@@ -68,6 +68,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
 
     	std::cerr << "numOfFragSize=" << rgsNew.fragSize.numOfFragSize
     			  << "\tquantileNum=" << rgsNew.fragSize.quantileNum;
+    			  */
     }
 
     rstats.write(outs.getStream());
