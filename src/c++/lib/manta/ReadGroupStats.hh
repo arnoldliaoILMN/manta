@@ -20,12 +20,14 @@
 #include <iosfwd>
 #include <vector>
 #include <string>
-#include <map>
+#include <ext/hash_map>
 
-#include "boost/unordered_map.hpp"
+//#include "boost/unordered_map.hpp"
 #include "boost/optional.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/hash_map.hpp"
 
 
 struct PairStatSet
@@ -43,9 +45,9 @@ struct PairStatSet
     static const int quantileNum = 1000;
     float quantiles[quantileNum];
 
-    typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;
+    //typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;
+    typedef __gnu_cxx::hash_map <int, std::pair<int, float> > hash_map_fragment;
     hash_map_fragment fragmentSizeHash;
-
 
     bool
         calcStats();

@@ -37,9 +37,9 @@ void
 writeFragSizeHashItem(std::ostream& os, PairStatSet::hash_map_fragment fragmentSizeHash, int k)
 {
 	os << k << " -> <"
-	   << fragmentSizeHash.at(k).first
+	   << fragmentSizeHash[k].first
 	   << ", "
-	   << fragmentSizeHash.at(k).second
+	   << fragmentSizeHash[k].second
 	   << ">\n";
 }
 
@@ -55,7 +55,7 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 	float cumulative = 0;
 	for(int s=0; s<numOfFragSize; s++)
 	{	int fs = fragmentSizes[s];
-		int count = fragmentSizeHash.at(fs).first;
+		int count = fragmentSizeHash[fs].first;
 		float freq = count / (float)totalCount;
 
 		cumulative += freq;
@@ -203,12 +203,12 @@ cdf(const int fs) const
 	float cumProb = 0;
 
 	if (fragmentSizeHash.find(fs) != fragmentSizeHash.end())
-		cumProb = fragmentSizeHash.at(fs).second;
+		cumProb = fragmentSizeHash[fs].second;
 	else
 	{
 		int estimated = binarySearch(numOfFragSize, fragmentSizes, fs);
 		if (estimated > -1)
-			cumProb = fragmentSizeHash.at(estimated).second;
+			cumProb = fragmentSizeHash[estimated].second;
 	}
 
 	return cumProb;
@@ -343,7 +343,7 @@ ReadGroupStats(const std::string& statsBamFile)
                 	fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
                 else
                 	// increase the count
-                	fragSize.fragmentSizeHash.at(currFragSize).first++;
+                	fragSize.fragmentSizeHash[currFragSize].first++;
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
