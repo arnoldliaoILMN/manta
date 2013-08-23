@@ -37,9 +37,9 @@ void
 writeFragSizeHashItem(std::ostream& os, PairStatSet::hash_map_fragment fragmentSizeHash, int k)
 {
 	os << k << " -> <"
-	   << fragmentSizeHash[k].first
+	   << fragmentSizeHash.find(k)->first
 	   << ", "
-	   << fragmentSizeHash[k].second
+	   << fragmentSizeHash.find(k)->second
 	   << ">\n";
 }
 
@@ -55,12 +55,12 @@ populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
 	float cumulative = 0;
 	for(int s=0; s<numOfFragSize; s++)
 	{	int fs = fragmentSizes[s];
-		int count = fragmentSizeHash[fs].first;
+		int count = fragmentSizeHash.find(fs)->first;
 		float freq = count / (float)totalCount;
 
 		cumulative += freq;
 		// update the hash map with cdf
-		fragmentSizeHash[fs].second = cumulative;
+		fragmentSizeHash.find(fs)->second = cumulative;
 
 		int fillNext = rint(cumulative * quantileNum);
 		for (int q = fillBase; q < fillNext; q++)
@@ -203,12 +203,12 @@ cdf(const int fs) const
 	float cumProb = 0;
 
 	if (fragmentSizeHash.find(fs) != fragmentSizeHash.end())
-		cumProb = fragmentSizeHash[fs].second;
+		cumProb = fragmentSizeHash.find(fs)->second;
 	else
 	{
 		int estimated = binarySearch(numOfFragSize, fragmentSizes, fs);
 		if (estimated > -1)
-			cumProb = fragmentSizeHash[estimated].second;
+			cumProb = fragmentSizeHash.find(fs)->second;
 	}
 
 	return cumProb;
