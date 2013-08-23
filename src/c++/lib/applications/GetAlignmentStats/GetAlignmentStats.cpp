@@ -67,7 +67,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	rstatsDeserized.setStats(file, rgsNew);
     }
 
-    rstats.write(outs.getStream());
+    //rstats.write(outs.getStream());
     // debug...
     rstatsDeserized.write(outs.getStream());
 
