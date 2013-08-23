@@ -26,6 +26,7 @@
 #include "boost/optional.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/hash_map.hpp"
 
@@ -42,7 +43,7 @@ struct PairStatSet
     int numOfFragSize;
     std::vector<int> fragmentSizes;
 
-    static const int quantileNum = 1000;
+    static int quantileNum = 1000;
     float quantiles[quantileNum];
 
     //typedef boost::unordered_map<int, std::pair<int, float> > hash_map_fragment;

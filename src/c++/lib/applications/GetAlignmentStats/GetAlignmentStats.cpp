@@ -22,6 +22,9 @@
 #include "boost/foreach.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/shared_ptr.hpp"
+#include "boost/serialization/vector.hpp"
+#include "boost/serialization/hash_map.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -63,7 +66,6 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	ia >> rgsNew;
 
     	rstatsDeserized.setStats(file, rgsNew);
-
     }
 
     rstats.write(outs.getStream());
