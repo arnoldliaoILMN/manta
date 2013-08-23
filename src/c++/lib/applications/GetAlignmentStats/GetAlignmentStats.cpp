@@ -65,6 +65,9 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	ia >> rgsNew;
 
     	rstatsDeserized.setStats(file, rgsNew);
+
+    	std::cerr << "numOfFragSize=" << rgsNew.fragSize.numOfFragSize
+    			  << "\tquantileNum=" << rgsNew.fragSize.quantileNum;
     }
 
     //rstats.write(outs.getStream());
