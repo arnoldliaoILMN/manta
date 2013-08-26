@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 
 // serialization
@@ -66,7 +67,7 @@ load(const char* filename)
 	{
 		std::cerr<<"i= "<<i<<"\n";
 
-		std::ostringstream ss;
+		std::stringstream ss;
 		ss << i;
 
 		std::string bamFile(ss.str());
