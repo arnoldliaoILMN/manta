@@ -30,7 +30,7 @@ save(const char* filename) const
 	using namespace boost::archive;
 
 	assert(NULL != filename);
-    std::ofstream ofs(filename, std::fstream::binary);
+    std::ofstream ofs(filename, std::ios::binary);
     boost::archive::text_oarchive oa(ofs);
 
 	const unsigned numGroups(_group.size());
@@ -51,7 +51,7 @@ load(const char* filename)
 	clear();
 
 	assert(NULL != filename);
-	std::ifstream ifs(filename, std::fstream::binary);
+	std::ifstream ifs(filename, std::ios::binary);
 	boost::archive::text_iarchive ia(ifs);
 
 	while (ifs.peek() != EOF)
