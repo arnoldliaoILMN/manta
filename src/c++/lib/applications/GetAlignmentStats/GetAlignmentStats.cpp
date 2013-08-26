@@ -43,9 +43,6 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     }
 
     ReadGroupStatsSet rstats;
-    // debug...
-    ReadGroupStatsSet rstatsDeserized;
-
     BOOST_FOREACH(const std::string& file, opt.alignmentFilename)
     {
         ReadGroupStats rgs = ReadGroupStats(file);
@@ -55,13 +52,12 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     //rstats.write(outs.getStream());
 
     // debug...
-    char serizedStatsFile[] = "/home/xchen/projs/manta/results/stats/temp.stats";
-    rstats.save(serizedStatsFile);
-/*
+    char serializedStatsFile[] = "/home/xchen/projs/manta/results/stats/temp.stats";
+    rstats.save(serializedStatsFile);
+
     ReadGroupStatsSet rstatsNew;
-    rstatsNew.load(serizedStatsFile);
-    rstatsNew.write(outs.getStream());
-    */
+    rstatsNew.load(serializedStatsFile);
+    //rstatsNew.write(outs.getStream());
 }
 
 
