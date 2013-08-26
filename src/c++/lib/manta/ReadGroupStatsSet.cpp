@@ -73,7 +73,7 @@ load(const char* filename)
 
 		setStats(bamFile, rgs);
 
-		std::cerr<<"peek="<<ifs.peek()<<" "<<"EOF="<<EOF;
+		std::cerr<<"peek="<<ifs.peek()<<" "<<"EOF="<<EOF<<"\n";
 
 		i++;
 	}
