@@ -26,7 +26,6 @@
 #include "boost/optional.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
-//#include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/serialization/hash_map.hpp"
 
@@ -64,7 +63,7 @@ struct PairStatSet
     cdf(const int x) const;
 
 private:
-    friend class boost::serialization::access;
+    //friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -98,13 +97,6 @@ public:
     write(std::ostream& os) const;
 
 private:
-    // These data are used temporarily during ReadPairStats estimation
-    /*
-    struct PairStatsData {
-        std::vector<int32_t> fragmentLengths;
-    };
-    */
-
     /// If PairStats has converged (or if isForcedConvergence is true)
     /// 1. All stats are computed
     /// 2. return true
@@ -117,7 +109,7 @@ private:
     bool computePairStats(std::string& statsBamFile,
     		              const bool isForcedConvergence = false);
 
-    friend class boost::serialization::access;
+    //friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
