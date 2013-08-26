@@ -118,14 +118,21 @@ private:
     		              const bool isForcedConvergence = false);
 
     friend class boost::serialization::access;
-    // When the class Archive corresponds to an output archive, the
-    // & operator is defined similar to <<.  Likewise, when the class Archive
-    // is a type of input archive the & operator is defined similar to >>.
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
     	ar & fragSize;
     	ar & relOrients;
     }
+
+    /*
+    // binary serialization
+       void
+       save(const char* filename) const;
+
+       // restore from binary serialization
+       void
+       load(const char* filename);
+       */
 };
 

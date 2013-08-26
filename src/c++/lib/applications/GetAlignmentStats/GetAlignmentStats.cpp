@@ -22,9 +22,9 @@
 #include "boost/foreach.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/archive/text_iarchive.hpp"
-#include "boost/serialization/shared_ptr.hpp"
-#include "boost/serialization/vector.hpp"
-#include "boost/serialization/hash_map.hpp"
+//#include "boost/serialization/shared_ptr.hpp"
+//#include "boost/serialization/vector.hpp"
+//#include "boost/serialization/hash_map.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -57,24 +57,19 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
 
     	{
     	// debug...
-    		std::ofstream outs(serizedStatsFile, std::fstream::out | std::fstream::binary);
+    		std::ofstream outs(serizedStatsFile, std::fstream::binary);
     		boost::archive::text_oarchive oa(outs);
     		oa << rgs;
     	}
 
     	ReadGroupStats rgsNew;
     	{
-    		std::ifstream ins(serizedStatsFile, std::fstream::binary | std::fstream::in);
+    		std::ifstream ins(serizedStatsFile, std::fstream::binary);
     		boost::archive::text_iarchive ia(ins);
     		ia >> rgsNew;
     	}
 
     	rstatsDeserized.setStats(file, rgsNew);
-
-    	/*
-    	std::cerr << "numOfFragSize=" << rgsNew.fragSize.numOfFragSize
-    			  << "\tquantileNum=" << rgsNew.fragSize.quantileNum;
-    			  */
     }
 
     //rstats.write(outs.getStream());
