@@ -57,10 +57,11 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     // debug...
     char serizedStatsFile[] = "/home/xchen/projs/manta/results/stats/temp.stats";
     rstats.save(serizedStatsFile);
-
+/*
     ReadGroupStatsSet rstatsNew;
     rstatsNew.load(serizedStatsFile);
     rstatsNew.write(outs.getStream());
+    */
 }
 
 
