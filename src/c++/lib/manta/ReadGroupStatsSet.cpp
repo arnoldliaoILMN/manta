@@ -69,7 +69,7 @@ load(const char* filename)
 		std::stringstream ss;
 		ss << i;
 
-		std::string bamFile(ss);
+		std::string bamFile(ss.str());
 		ReadGroupStats rgs;
 		//ia >> bamFile;
 		ia >> rgs;
