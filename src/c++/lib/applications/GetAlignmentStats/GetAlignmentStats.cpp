@@ -57,7 +57,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
 
     ReadGroupStatsSet rstatsNew;
     rstatsNew.load(serializedStatsFile);
-    //rstatsNew.write(outs.getStream());
+    rstatsNew.write(outs.getStream());
 }
 
 
