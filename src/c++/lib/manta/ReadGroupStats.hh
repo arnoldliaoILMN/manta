@@ -114,7 +114,7 @@ private:
     void serialize(Archive & ar, const unsigned int version)
     {
     	ar & fragSize;
-    	ar & relOrients;
+    	//ar & relOrients;
     }
 };
 
