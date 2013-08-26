@@ -58,24 +58,18 @@ load(const char* filename)
 
 	int i = 0;
 	//while (ifs.peek() != EOF)
-
 	while (i < 2)
 	{
 		std::cerr<<"i= "<<i<<"\n";
 
-		std::stringstream ss;
-
-		ss << i;
-
-		std::string bamFile(ss.str());
+		std::string bamFile;
 		ReadGroupStats rgs;
-		//ia >> bamFile;
+		ia >> bamFile;
 		ia >> rgs;
-
-		std::cerr<<"bamFile: "<<bamFile<<"\n";
 
 		setStats(bamFile, rgs);
 
+		std::cerr<<"bamFile: "<<bamFile<<"\n";
 		std::cerr<<"peek="<<ifs.peek()<<" "<<"EOF="<<EOF<<"\n";
 
 		i++;
