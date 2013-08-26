@@ -18,9 +18,12 @@
 #include "blt_util/parse_util.hh"
 #include "blt_util/string_util.hh"
 
+#include "boost/archive/text_oarchive.hpp"
+#include "boost/archive/text_iarchive.hpp"
+#include "boost/serialization/string.hpp"
+
 #include <fstream>
 #include <iostream>
-#include <sstream>
 
 
 // serialization
@@ -38,7 +41,6 @@ save(const char* filename) const
 	for (unsigned i(0); i<numGroups; ++i)
 	{
 		std::cerr<<"key: "<<_group.get_key(i)<<"\n";
-
 		oa << _group.get_key(i);
 		oa << getStats(i);
 	}

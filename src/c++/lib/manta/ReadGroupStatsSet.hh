@@ -22,7 +22,6 @@
 #include "boost/optional.hpp"
 
 
-
 /// \brief manages multiple read_group_stats
 ///
 struct ReadGroupStatsSet
