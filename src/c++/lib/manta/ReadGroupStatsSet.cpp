@@ -37,6 +37,8 @@ save(const char* filename) const
 	const unsigned numGroups(_group.size());
 	for (unsigned i(0); i<numGroups; ++i)
 	{
+		std::cerr<<"key: "<<_group.get_key(i)<<"\n";
+
 		oa << _group.get_key(i);
 		oa << getStats(i);
 	}
@@ -70,6 +72,9 @@ load(const char* filename)
 		std::cerr<<"bamFile: "<<bamFile<<"\n";
 
 		setStats(bamFile, rgs);
+
+		std::cerr<<"peek="<<ifs.peek()<<" "<<"EOF="<<EOF;
+
 		i++;
 	}
 }
