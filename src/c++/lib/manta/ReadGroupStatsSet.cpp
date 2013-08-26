@@ -60,6 +60,8 @@ load(const char* filename)
 
 	//while (i < 2)
 	{
+		std::cerr<<"i= "<<i<<"\n";
+
 		std::string bamFile;
 		ReadGroupStats rgs;
 		ia >> bamFile;
