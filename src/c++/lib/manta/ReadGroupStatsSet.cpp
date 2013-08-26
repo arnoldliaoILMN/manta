@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 
 // serialization
@@ -54,9 +55,10 @@ load(const char* filename)
 	std::ifstream ifs(filename, std::ios::binary);
 	boost::archive::text_iarchive ia(ifs);
 
-	//while (ifs.peek() != EOF)
 	int i = 0;
-	while (i < 2)
+	while (ifs.peek() != EOF)
+
+	//while (i < 2)
 	{
 		std::string bamFile;
 		ReadGroupStats rgs;
