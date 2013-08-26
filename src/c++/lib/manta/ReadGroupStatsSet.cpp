@@ -60,6 +60,9 @@ load(const char* filename)
 		ReadGroupStats rgs;
 		ia >> bamFile;
 		ia >> rgs;
+
+		std::cerr<<"bamFile: "<<bamFile<<"\n";
+
 		setStats(bamFile, rgs);
 	}
 }
