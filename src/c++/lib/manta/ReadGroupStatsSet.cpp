@@ -32,8 +32,6 @@ void
 ReadGroupStatsSet::
 save(const char* filename) const
 {
-	using namespace boost::archive;
-
 	assert(NULL != filename);
     std::ofstream ofs(filename, std::ios::binary);
     boost::archive::text_oarchive oa(ofs);
@@ -52,8 +50,6 @@ void
 ReadGroupStatsSet::
 load(const char* filename)
 {
-	using namespace boost::archive;
-
 	clear();
 
 	assert(NULL != filename);
