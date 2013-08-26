@@ -64,6 +64,7 @@ load(const char* filename)
 		std::cerr<<"i= "<<i<<"\n";
 
 		std::stringstream ss;
+
 		ss << i;
 
 		std::string bamFile(ss.str());
