@@ -59,6 +59,16 @@ struct ReadGroupStatsSet
         _group.insert(bam_file,rps);
     }
 
+
+    //TODO: make serialization in xml format
+    // serialization
+    void
+    save(const char* filename) const;
+
+    // restore from serialization
+    void
+    load(const char* filename);
+
     //
     // persistence:
     //
@@ -67,6 +77,7 @@ struct ReadGroupStatsSet
 
     void
     read(const char* filename);
+
 
 private:
     void

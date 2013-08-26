@@ -63,7 +63,7 @@ struct PairStatSet
     cdf(const int x) const;
 
 private:
-    //friend class boost::serialization::access;
+    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
@@ -109,22 +109,12 @@ private:
     bool computePairStats(std::string& statsBamFile,
     		              const bool isForcedConvergence = false);
 
-    //friend class boost::serialization::access;
+    friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
     	ar & fragSize;
     	ar & relOrients;
     }
-
-    /*
-    // binary serialization
-       void
-       save(const char* filename) const;
-
-       // restore from binary serialization
-       void
-       load(const char* filename);
-       */
 };
 

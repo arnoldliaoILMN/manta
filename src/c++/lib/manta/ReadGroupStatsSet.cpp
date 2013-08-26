@@ -22,6 +22,46 @@
 #include <iostream>
 
 
+// serialization
+void
+ReadGroupStatsSet::
+save(const char* filename) const
+{
+	using namespace boost::archive;
+	assert(NULL != filename);
+    std::ofstream ofs(filename, std::fstream::binary);
+    boost::archive::text_oarchive oa(ofs);
+
+	const unsigned numGroups(_group.size());
+	for (unsigned i(0); i<numGroups; ++i)
+	{
+		oa << _group.get_key(i);
+		oa << getStats(i);
+	}
+}
+
+// restore from serialization
+void
+ReadGroupStatsSet::
+load(const char* filename)
+{
+	using namespace boost::archive;
+
+	assert(NULL != filename);
+	std::ifstream ifs(filename, std::fstream::binary);
+	boost::archive::text_iarchive ia(ifs);
+
+	while (ifs.peek() != EOF)
+	{
+		std::string bamFile;
+		ReadGroupStats rgs;
+		ia >> bamFile;
+		ia >> rgs;
+		setStats(bamFile, rgs);
+	}
+}
+
+
 void
 ReadGroupStatsSet::
 read(const char* filename)
