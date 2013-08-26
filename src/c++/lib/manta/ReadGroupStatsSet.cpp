@@ -37,6 +37,7 @@ save(const char* filename) const
     boost::archive::text_oarchive oa(ofs);
 
 	const unsigned numGroups(_group.size());
+	oa << numGroups;
 	for (unsigned i(0); i<numGroups; ++i)
 	{
 		oa << _group.get_key(i);
@@ -55,12 +56,10 @@ load(const char* filename)
 	std::ifstream ifs(filename, std::ios::binary);
 	boost::archive::text_iarchive ia(ifs);
 
-	int i = 0;
-	//while (ifs.peek() != EOF)
-	while (i < 2)
+	int numGroups;
+	ia >> numGroups;
+	for (int i=0; i<numGroups; i++)
 	{
-		std::cerr<<"i= "<<i<<"\n";
-
 		std::string bamFile;
 		ReadGroupStats rgs;
 		ia >> bamFile;
@@ -68,10 +67,8 @@ load(const char* filename)
 
 		setStats(bamFile, rgs);
 
+		std::cerr<<"i= "<<i<<"\n";
 		std::cerr<<"bamFile: "<<bamFile<<"\n";
-		std::cerr<<"peek="<<ifs.peek()<<" "<<"EOF="<<EOF<<"\n";
-
-		i++;
 	}
 }
 
