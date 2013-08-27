@@ -75,15 +75,6 @@ load(const char* filename)
 
 void
 ReadGroupStatsSet::
-read(const char* filename)
-{
-
-}
-
-
-
-void
-ReadGroupStatsSet::
 write(std::ostream& os) const
 {
     const unsigned n_groups(_group.size());

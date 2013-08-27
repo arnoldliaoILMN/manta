@@ -68,14 +68,10 @@ struct ReadGroupStatsSet
     void
     load(const char* filename);
 
-    //
-    // persistence:
-    //
+    // write out brief info of the stats class
+    // and some debugging info if under debug mode
     void
     write(std::ostream& os) const;
-
-    void
-    read(const char* filename);
 
 
 private:

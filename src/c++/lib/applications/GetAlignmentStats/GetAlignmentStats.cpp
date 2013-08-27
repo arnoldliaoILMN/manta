@@ -35,7 +35,6 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     // calculate fragment size statistics for all read groups in all bams
 
     // instantiate early to test for filename/permissions problems
-    OutStream outs(opt.outputFilename);
     if (opt.alignmentFilename.empty())
     {
         log_os << "ERROR: No input files specified.\n";
@@ -49,15 +48,7 @@ runAlignmentStats(const AlignmentStatsOptions& opt)
     	rstats.setStats(file,rgs);
     }
 
-    //rstats.write(outs.getStream());
-
-    // debug...
-    char serializedStatsFile[] = "/home/xchen/projs/manta/results/stats/temp.stats";
-    rstats.save(serializedStatsFile);
-
-    ReadGroupStatsSet rstatsNew;
-    rstatsNew.load(serializedStatsFile);
-    rstatsNew.write(outs.getStream());
+    rstats.save(opt.outputFilename.c_str());
 }
 
 
