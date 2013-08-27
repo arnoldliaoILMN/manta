@@ -309,16 +309,18 @@ private:
 
     /// shared node intersection utility
     ///
-    /// \param searchNodes the set of nodes to search for intersections in
-    /// \param filterLocusIndex ignore intersections from this locus
+    /// \param[in] searchNodes the set of nodes to search for intersections in
+    /// \param[in] filterLocusIndex ignore intersections from this locus
     ///
+    /// \param[out] searchDensity nodes searched / search region -- used to determine if local graph is getting too dense
     void
     getNodeIntersectCore(
         const LocusIndexType inputLocusIndex,
         const NodeIndexType inputNodeIndex,
         const LocusSetIndexerType& searchNodes,
         const LocusIndexType fitlerLocusIndex,
-        std::set<NodeAddressType>& intersectNodes) const;
+        std::set<NodeAddressType>& intersectNodes,
+        float& searchDensity) const;
 
     /// get all nodes in this object which intersect with
     /// the inputNode
@@ -326,9 +328,10 @@ private:
     getNodeIntersect(
         const LocusIndexType locusIndex,
         const NodeIndexType nodeIndex,
-        std::set<NodeAddressType>& intersectNodes) const
+        std::set<NodeAddressType>& intersectNodes,
+        float& searchDensity) const
     {
-        getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes);
+        getNodeIntersectCore(locusIndex, nodeIndex, _inodes, locusIndex, intersectNodes, searchDensity);
     }
 
     /// edges returned are in local_addy->remote_node orientation

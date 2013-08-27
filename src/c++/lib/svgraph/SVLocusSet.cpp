@@ -255,11 +255,13 @@ getNodeIntersectCore(
     const NodeIndexType inputNodeIndex,
     const LocusSetIndexerType& searchNodes,
     const LocusIndexType filterLocusIndex,
-    std::set<NodeAddressType>& intersectNodes) const
+    std::set<NodeAddressType>& intersectNodes,
+    float& searchDensity) const
 {
     typedef LocusSetIndexerType::const_iterator in_citer;
 
     intersectNodes.clear();
+    searchDensity=0;
 
 #ifdef DEBUG_SVL
     log_os << "SVLocusSet::getNodeIntersectCore inputNode: " << inputLocusIndex << ":" << inputNodeIndex << " " << getNode(std::make_pair(inputLocusIndex,inputNodeIndex));
@@ -274,9 +276,13 @@ getNodeIntersectCore(
 
     const in_citer it_begin(searchNodes.begin()), it_end(searchNodes.end());
 
+    // diagnostics to determine if graph is growing too dense in one region:
+    unsigned searchCount(0);
+
     // first look forward and extend to find all nodes which this inputNode intersects:
     for (in_citer it_fwd(it); it_fwd != it_end; ++it_fwd)
     {
+        searchCount++;
         if (it_fwd->first == filterLocusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "\tFWD test: " << (*it_fwd) << " " << getNode(*it_fwd);
@@ -292,6 +298,7 @@ getNodeIntersectCore(
     for (in_citer it_rev(it); it_rev != it_begin; )
     {
         --it_rev;
+        searchCount++;
         if (it_rev->first == filterLocusIndex) continue;
 #ifdef DEBUG_SVL
         log_os << "\tREV test: " << (*it_rev) << " " << getNode(*it_rev);
@@ -311,6 +318,11 @@ getNodeIntersectCore(
         log_os << "\tREV insert: " << (*it_rev) << "\n";
 #endif
     }
+
+    const pos_t searchSize(inputInterval.range.end_pos() - std::max(0, inputInterval.range.begin_pos()-maxRegionSize));
+    assert(searchSize>=0);
+    if(0 == searchSize) return;
+    searchDensity=(static_cast<float>(searchCount)/static_cast<float>(searchSize));
 }
 
 
@@ -330,7 +342,8 @@ getIntersectingEdgeNodes(
 
     // find all remote nodes that are part of edges which intersect the input:
     std::set<NodeAddressType> edgeIntersectRemoteTemp;
-    getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersect,inputLocusIndex,edgeIntersectRemoteTemp);
+    float searchDensity;
+    getNodeIntersectCore(inputLocusIndex,inputRemoteNodeIndex,remoteIntersect,inputLocusIndex,edgeIntersectRemoteTemp, searchDensity);
 
     BOOST_FOREACH(const NodeAddressType remoteIsectAddy, edgeIntersectRemoteTemp)
     {
@@ -385,7 +398,12 @@ getNodeMergeableIntersect(
     {
         // get a standard intersection of the input node:
         std::set<NodeAddressType> intersectNodes;
-        getNodeIntersect(inputLocusIndex,inputNodeIndex,intersectNodes);
+        float searchDensity;
+        getNodeIntersect(inputLocusIndex,inputNodeIndex,intersectNodes, searchDensity);
+
+        // check whether intersection density has exceeded tolerable limits:
+        std::cerr << "Density: " << searchDensity << "\n";
+
         BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
         {
             const SVLocus& intersectLocus(getLocus(intersectAddy.first));
@@ -520,7 +538,8 @@ getNodeMergeableIntersect(
 #endif
             // get a standard intersection of the input node:
             std::set<NodeAddressType> intersectNodes;
-            getNodeIntersectCore(mergeAddy.first,mergeAddy.second, _inodes,inputLocusIndex,intersectNodes);
+            float searchDensity;
+            getNodeIntersectCore(mergeAddy.first,mergeAddy.second, _inodes,inputLocusIndex, intersectNodes, searchDensity);
             BOOST_FOREACH(const NodeAddressType intersectAddy, intersectNodes)
             {
 #ifdef DEBUG_SVL
@@ -585,7 +604,8 @@ getRegionIntersect(
     const LocusIndexType startLocusIndex(insertLocus(SVLocus()));
     const NodeIndexType nodeIndex = getLocus(startLocusIndex).addNode(interval);
 
-    getNodeIntersect(startLocusIndex,nodeIndex,intersectNodes);
+    float searchDensity;
+    getNodeIntersect(startLocusIndex, nodeIndex, intersectNodes, searchDensity);
 
     clearLocus(startLocusIndex);
 }
