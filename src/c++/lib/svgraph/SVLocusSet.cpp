@@ -337,12 +337,12 @@ getNodeIntersectCore(
 #endif
     }
 
-    if(! isTestUsability) return true;
+    if (! isTestUsability) return true;
 
     bool isUsable(true);
     _highestSearchCount = std::max(_highestSearchCount, searchCount);
 
-    if(searchCount > _opt.maxSearchCount)
+    if (searchCount > _opt.maxSearchCount)
     {
         isUsable = false;
         _isMaxSearchCount=true;
@@ -350,14 +350,14 @@ getNodeIntersectCore(
 
     pos_t searchSize(inputInterval.range.end_pos() - std::max(0, inputInterval.range.begin_pos()-maxRegionSize));
     assert(searchSize>=0);
-    if(0 != searchSize)
+    if (0 != searchSize)
     {
         static const pos_t minSearchSize(40);
         searchSize = std::max(searchSize, minSearchSize);
         const float searchDensity(static_cast<float>(searchCount)/static_cast<float>(searchSize));
         _highestSearchDensity = std::max(_highestSearchDensity, searchDensity);
 
-        if(searchDensity > _opt.maxSearchDensity)
+        if (searchDensity > _opt.maxSearchDensity)
         {
             isUsable = false;
             _isMaxSearchDensity=true;
@@ -442,7 +442,7 @@ getNodeMergeableIntersect(
         std::set<NodeAddressType> intersectNodes;
         const bool isUsable(getNodeIntersect(inputLocusIndex, inputNodeIndex, intersectNodes, testUsability));
 
-        if(testUsability && (! isUsable)) return false;
+        if (testUsability && (! isUsable)) return false;
 
         BOOST_FOREACH(const NodeAddressType& intersectAddy, intersectNodes)
         {

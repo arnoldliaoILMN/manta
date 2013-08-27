@@ -433,10 +433,10 @@ bool
 SVLocusScanner::
 isSemiAligned(const bam_record& bamRead) const
 {
-	ALIGNPATH::path_t apath;
-	bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
+    ALIGNPATH::path_t apath;
+    bam_cigar_to_apath(bamRead.raw_cigar(),bamRead.n_cigar(),apath);
     const double minSemiAlignedScore(10.0);
-	return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
+    return (ReadScorer::get().getSemiAlignedMetric(apath,bamRead.qual())>minSemiAlignedScore);
 }
 
 bool

@@ -34,7 +34,7 @@ struct SVLocusSetOptions
     template<class Archive>
     void serialize(Archive& ar, const unsigned /* version */)
     {
-        ar & minMergeEdgeCount & maxSearchCount & maxSearchDensity;
+        ar& minMergeEdgeCount& maxSearchCount& maxSearchDensity;
     }
 
     unsigned minMergeEdgeCount; ///< to reduce noise in the graph, we only merge once shared edges (including self-edges) reach this count
