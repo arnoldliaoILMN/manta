@@ -34,8 +34,8 @@ struct PairStatSet
 {
     PairStatSet()
     {
-    	totalCount = 0;
-    	numOfFragSize = 0;
+        totalCount = 0;
+        numOfFragSize = 0;
     }
 
     int totalCount;
@@ -49,7 +49,7 @@ struct PairStatSet
     hash_map_fragment fragmentSizeHash;
 
     bool
-        calcStats();
+    calcStats();
     ///
     /// const interface used by variant callers:
     ///
@@ -65,13 +65,13 @@ struct PairStatSet
 private:
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void serialize(Archive& ar, const unsigned int version)
     {
-    	ar & totalCount;
-    	ar & numOfFragSize;
-    	ar & fragmentSizes;
-    	ar & quantiles;
-    	ar & fragmentSizeHash;
+        ar& totalCount;
+        ar& numOfFragSize;
+        ar& fragmentSizes;
+        ar& quantiles;
+        ar& fragmentSizeHash;
     }
 
 };
@@ -107,14 +107,14 @@ private:
     ///
 
     bool computePairStats(std::string& statsBamFile,
-    		              const bool isForcedConvergence = false);
+                          const bool isForcedConvergence = false);
 
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void serialize(Archive& ar, const unsigned int version)
     {
-    	ar & fragSize;
-    	ar & relOrients;
+        ar& fragSize;
+        ar& relOrients;
     }
 };
 

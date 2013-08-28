@@ -36,37 +36,38 @@ static
 void
 writeFragSizeHashItem(std::ostream& os, PairStatSet::hash_map_fragment fragmentSizeHash, int k)
 {
-	os << k << " -> <"
-	   << fragmentSizeHash.find(k)->second.first
-	   << ", "
-	   << fragmentSizeHash.find(k)->second.second
-	   << ">\n";
+    os << k << " -> <"
+       << fragmentSizeHash.find(k)->second.first
+       << ", "
+       << fragmentSizeHash.find(k)->second.second
+       << ">\n";
 }
 
 
 static
 void
 populateCdfQuantiles(PairStatSet::hash_map_fragment& fragmentSizeHash,
-		          	 std::vector<int> fragmentSizes,
-		          	 int numOfFragSize, int totalCount,
-		          	 int quantileNum, float* quantiles)
+                     std::vector<int> fragmentSizes,
+                     int numOfFragSize, int totalCount,
+                     int quantileNum, float* quantiles)
 {
-	int fillBase = 0;
-	float cumulative = 0;
-	for(int s=0; s<numOfFragSize; s++)
-	{	int fs = fragmentSizes[s];
-		int count = fragmentSizeHash.find(fs)->second.first;
-		float freq = count / (float)totalCount;
+    int fillBase = 0;
+    float cumulative = 0;
+    for (int s=0; s<numOfFragSize; s++)
+    {
+        int fs = fragmentSizes[s];
+        int count = fragmentSizeHash.find(fs)->second.first;
+        float freq = count / (float)totalCount;
 
-		cumulative += freq;
-		// update the hash map with cdf
-		fragmentSizeHash.find(fs)->second.second = cumulative;
+        cumulative += freq;
+        // update the hash map with cdf
+        fragmentSizeHash.find(fs)->second.second = cumulative;
 
-		int fillNext = rint(cumulative * quantileNum);
-		for (int q = fillBase; q < fillNext; q++)
-			quantiles[q] = fs;
-		fillBase = fillNext;
-	}
+        int fillNext = rint(cumulative * quantileNum);
+        for (int q = fillBase; q < fillNext; q++)
+            quantiles[q] = fs;
+        fillBase = fillNext;
+    }
 }
 
 
@@ -81,17 +82,17 @@ isStatSetMatch(const PairStatSet& pss1,
     float delta = 0.1;
     while (p < 1)
     {
-    	// check if percentile values equal
-    	int b = p * pss2.quantileNum - 1;
-    	if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
-    		return false;
+        // check if percentile values equal
+        int b = p * pss2.quantileNum - 1;
+        if (std::abs(pss1.quantiles[b] - pss2.quantiles[b])>=1)
+            return false;
 
-    	// check the convergence of cdf of the median value
-    	int medFragSize = pss2.quantiles[b];
-    	if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
-    		return false;
+        // check the convergence of cdf of the median value
+        int medFragSize = pss2.quantiles[b];
+        if (std::abs(pss1.cdf(medFragSize) - pss2.cdf(medFragSize)) >= statsPrecision)
+            return false;
 
-    	p += delta;
+        p += delta;
     }
 
     return true;
@@ -101,23 +102,23 @@ static
 int
 binarySearch(int vectorLen, std::vector<int> sortedVec, int value)
 {
-	int ret = -1;
+    int ret = -1;
 
-	int lowIx = 0;
-	int highIx = vectorLen;
-	while (lowIx + 1 < highIx)
-	{
-		int midIx = (highIx + lowIx) / 2;
-		if (sortedVec[midIx] > value)
-			highIx = midIx;
-		else
-			lowIx = midIx;
-	}
+    int lowIx = 0;
+    int highIx = vectorLen;
+    while (lowIx + 1 < highIx)
+    {
+        int midIx = (highIx + lowIx) / 2;
+        if (sortedVec[midIx] > value)
+            highIx = midIx;
+        else
+            lowIx = midIx;
+    }
 
-	if (value >= sortedVec[lowIx])
-		ret = sortedVec[lowIx];
+    if (value >= sortedVec[lowIx])
+        ret = sortedVec[lowIx];
 
-	return ret;
+    return ret;
 }
 
 
@@ -157,7 +158,7 @@ calcStats()
 #ifdef DEBUG_RPS
     std::cerr<<"Calculating stats...\n";
 #endif
-	// calculate statistics from hashed insert sizes
+    // calculate statistics from hashed insert sizes
     numOfFragSize = fragmentSizeHash.size();
 #ifdef DEBUG_RPS
     std::cerr<<"numOfFragSize="<<numOfFragSize<<"\n";
@@ -169,13 +170,13 @@ calcStats()
     fragmentSizes.clear();
     // populate the vector of fragment sizes
     BOOST_FOREACH (hash_map_fragment::value_type& hashItem, fragmentSizeHash)
-    	fragmentSizes.push_back(hashItem.first);
+    fragmentSizes.push_back(hashItem.first);
     // sort all insert sizes
     std::sort(fragmentSizes.begin(), fragmentSizes.end());
 
     // populate the array of quantiles
     populateCdfQuantiles(fragmentSizeHash, fragmentSizes, numOfFragSize,
-    		          	 totalCount, quantileNum, quantiles);
+                         totalCount, quantileNum, quantiles);
 
 
     return true;
@@ -187,31 +188,31 @@ int
 PairStatSet::
 quantile(const float p) const
 {
-	int insertSize = 0;
+    int insertSize = 0;
 
-	int bin = rint(p * quantileNum) - 1;
-	if ((bin >= 0) && (bin < quantileNum))
-		insertSize = quantiles[bin];
+    int bin = rint(p * quantileNum) - 1;
+    if ((bin >= 0) && (bin < quantileNum))
+        insertSize = quantiles[bin];
 
-	return insertSize;
+    return insertSize;
 }
 
 float
 PairStatSet::
 cdf(const int fs) const
 {
-	float cumProb = 0;
+    float cumProb = 0;
 
-	if (fragmentSizeHash.find(fs) != fragmentSizeHash.end())
-		cumProb = fragmentSizeHash.find(fs)->second.second;
-	else
-	{
-		int estimated = binarySearch(numOfFragSize, fragmentSizes, fs);
-		if (estimated > -1)
-			cumProb = fragmentSizeHash.find(fs)->second.second;
-	}
+    if (fragmentSizeHash.find(fs) != fragmentSizeHash.end())
+        cumProb = fragmentSizeHash.find(fs)->second.second;
+    else
+    {
+        int estimated = binarySearch(numOfFragSize, fragmentSizes, fs);
+        if (estimated > -1)
+            cumProb = fragmentSizeHash.find(fs)->second.second;
+    }
 
-	return cumProb;
+    return cumProb;
 }
 
 std::ostream&
@@ -339,11 +340,11 @@ ReadGroupStats(const std::string& statsBamFile)
                 fragSize.totalCount++;
                 int currFragSize = std::abs(al.template_size());
                 if (fragSize.fragmentSizeHash.find(currFragSize) == fragSize.fragmentSizeHash.end())
-                	// initialize the count
-                	fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
+                    // initialize the count
+                    fragSize.fragmentSizeHash[currFragSize] = std::make_pair(1, 0);
                 else
-                	// increase the count
-                	fragSize.fragmentSizeHash[currFragSize].first++;
+                    // increase the count
+                    fragSize.fragmentSizeHash[currFragSize].first++;
 
                 if ((recordCnts % statsCheckCnt) != 0) continue;
 
@@ -357,14 +358,14 @@ ReadGroupStats(const std::string& statsBamFile)
                 fragSize.calcStats();
                 // check convergence
                 if (isFirstEstimation)
-                	isFirstEstimation = false;
+                    isFirstEstimation = false;
                 else
-                	isConverged=isStatSetMatch(oldFragSize, fragSize);
+                    isConverged=isStatSetMatch(oldFragSize, fragSize);
 
                 oldFragSize = fragSize;
 
                 if (isConverged || (recordCnts>5000000))
-                	isStopEstimation=true;
+                    isStopEstimation=true;
 
                 // break from reading the current chromosome
                 break;
@@ -380,19 +381,19 @@ ReadGroupStats(const std::string& statsBamFile)
             log_os << "\tTotal observed read pairs: " << fragSize.totalCount << "\n";
             exit(EXIT_FAILURE);
         }
-        else if((recordCnts % statsCheckCnt) != 0)
+        else if ((recordCnts % statsCheckCnt) != 0)
         {
-        	// caculate for
-        	fragSize.calcStats();
-        	// check convergence
-        	if (isFirstEstimation)
-        		isFirstEstimation = false;
-        	else
-        	   	isConverged=isStatSetMatch(oldFragSize, fragSize);
+            // caculate for
+            fragSize.calcStats();
+            // check convergence
+            if (isFirstEstimation)
+                isFirstEstimation = false;
+            else
+                isConverged=isStatSetMatch(oldFragSize, fragSize);
         }
 
         if (!isConverged)
-        	log_os << "WARNING: read pair statistics did not converge\n";
+            log_os << "WARNING: read pair statistics did not converge\n";
     }
 }
 

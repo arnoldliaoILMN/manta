@@ -32,17 +32,17 @@ void
 ReadGroupStatsSet::
 save(const char* filename) const
 {
-	assert(NULL != filename);
+    assert(NULL != filename);
     std::ofstream ofs(filename, std::ios::binary);
     boost::archive::text_oarchive oa(ofs);
 
-	const unsigned numGroups(_group.size());
-	oa << numGroups;
-	for (unsigned i(0); i<numGroups; ++i)
-	{
-		oa << _group.get_key(i);
-		oa << getStats(i);
-	}
+    const unsigned numGroups(_group.size());
+    oa << numGroups;
+    for (unsigned i(0); i<numGroups; ++i)
+    {
+        oa << _group.get_key(i);
+        oa << getStats(i);
+    }
 }
 
 // restore from serialization
@@ -50,26 +50,26 @@ void
 ReadGroupStatsSet::
 load(const char* filename)
 {
-	clear();
+    clear();
 
-	assert(NULL != filename);
-	std::ifstream ifs(filename, std::ios::binary);
-	boost::archive::text_iarchive ia(ifs);
+    assert(NULL != filename);
+    std::ifstream ifs(filename, std::ios::binary);
+    boost::archive::text_iarchive ia(ifs);
 
-	int numGroups;
-	ia >> numGroups;
-	for (int i=0; i<numGroups; i++)
-	{
-		std::string bamFile;
-		ReadGroupStats rgs;
-		ia >> bamFile;
-		ia >> rgs;
+    int numGroups;
+    ia >> numGroups;
+    for (int i=0; i<numGroups; i++)
+    {
+        std::string bamFile;
+        ReadGroupStats rgs;
+        ia >> bamFile;
+        ia >> rgs;
 
-		setStats(bamFile, rgs);
+        setStats(bamFile, rgs);
 
-		std::cerr<<"i= "<<i<<"\n";
-		std::cerr<<"bamFile: "<<bamFile<<"\n";
-	}
+        std::cerr<<"i= "<<i<<"\n";
+        std::cerr<<"bamFile: "<<bamFile<<"\n";
+    }
 }
 
 
