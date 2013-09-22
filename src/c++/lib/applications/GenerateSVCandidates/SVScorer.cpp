@@ -136,6 +136,59 @@ getBreakendMaxMappedDepth(const SVBreakend& bp)
 
 
 
+void
+SVScorer::
+getSVRefPairSupport(
+    const SVCandidate& sv,
+    SomaticSVScoreInfo& ssInfo)
+{
+    /// search for all read pairs supporting the reference allele
+    ///
+    /// APPROXIMATION: for imprecise and precise variants treat the breakend locations as the center of the
+    ///  breakend interval.
+    ///
+    /// TODO: improve on the approx above
+    ///
+
+    /// TODO: track read key to account for overlap of spanning and split read evidence
+
+    /// define a new interval -/+ 50 bases around the center pos
+    /// of the breakpoint
+    static const pos_t regionSize(50);
+    const pos_t centerPos(bp.interval.range.center_pos());
+    const known_pos_range2 searchRange(std::max((centerPos-regionSize),0), (centerPos+regionSize));
+
+
+
+    const unsigned bamCount(_bamStreams.size());
+    for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
+    {
+        if (_isAlignmentTumor[bamIndex]) continue;
+
+        bam_streamer& bamStream(*_bamStreams[bamIndex]);
+
+        // set bam stream to new search interval:
+        bamStream.set_new_region(bp.interval.tid, searchRange.begin_pos(), searchRange.end_pos());
+
+        while (bamStream.next())
+        {
+            const bam_record& bamRead(*(bamStream.get_record_ptr()));
+
+            // turn filtration off down to mapped only to match depth estimate method:
+            //if (_readScanner.isReadFiltered(bamRead)) continue;
+            if (bamRead.is_unmapped()) continue;
+
+            if ((bamRead.pos()-1) >= searchRange.end_pos()) break;
+
+            addReadToDepthEst(bamRead,searchRange.begin_pos(),depth);
+        }
+
+        isNormalFound=true;
+        break;
+    }
+}
+
+
 
 void
 SVScorer::
@@ -146,8 +199,8 @@ scoreSomaticSV(
 {
     ssInfo.clear();
 
-    // first exercise -- just count the sample assignment of the pairs we already have:
-
+    // count the read pairs supporting the alternate allele in each sample, using data we already produced during candidate generation:
+    //
     const unsigned bamCount(_bamStreams.size());
     for (unsigned bamIndex(0); bamIndex < bamCount; ++bamIndex)
     {
@@ -161,18 +214,22 @@ scoreSomaticSV(
 
             if (pair.read1.isSet())
             {
-                sample.bp1SpanReads += 1;
+                sample.altAlleleBp1SpanReads += 1;
             }
             if (pair.read2.isSet())
             {
-                sample.bp2SpanReads += 1;
+                sample.altAlleleBp2SpanReads += 1;
             }
             if (pair.read1.isSet() && pair.read2.isSet())
             {
-                sample.spanPairs += 1;
+                sample.altAlleleSpanPairs += 1;
             }
         }
     }
+
+    // count the read pairs supporting the refernece allele on each breakend in each sample:
+    //
+    getSVRefPairSupport(sv,ssInfo);
 
     // get breakend center_pos depth estimate:
     ssInfo.bp1MaxDepth=(getBreakendMaxMappedDepth(sv.bp1));
@@ -197,13 +254,13 @@ scoreSomaticSV(
 
     // assign bogus somatic score just to get started:
     bool isSomatic(true);
-    if (ssInfo.normal.spanPairs > 1) isSomatic=false;
+    if (ssInfo.normal.altAlleleSpanPairs > 1) isSomatic=false;
 
     if (isSomatic)
     {
-        const bool lowPairSupport(ssInfo.tumor.spanPairs < 6);
-        const bool lowSingleSupport((ssInfo.tumor.bp1SpanReads < 14) || (ssInfo.tumor.bp2SpanReads < 14));
-        const bool highSingleContam((ssInfo.normal.bp1SpanReads > 1) || (ssInfo.normal.bp2SpanReads > 1));
+        const bool lowPairSupport(ssInfo.tumor.altAlleleSpanPairs < 6);
+        const bool lowSingleSupport((ssInfo.tumor.altAlleleBp1SpanReads < 14) || (ssInfo.tumor.altAlleleBp2SpanReads < 14));
+        const bool highSingleContam((ssInfo.normal.altAlleleBp1SpanReads > 1) || (ssInfo.normal.altAlleleBp2SpanReads > 1));
 
         /// allow single pair support to rescue an SV only if the evidence looks REALLY good:
         if (lowPairSupport && (lowSingleSupport || highSingleContam)) isSomatic=false;
@@ -211,25 +268,25 @@ scoreSomaticSV(
 
     if (isSomatic)
     {
-        if (ssInfo.normal.spanPairs)
+        if (ssInfo.normal.altAlleleSpanPairs)
         {
-            const double ratio(static_cast<double>(ssInfo.tumor.spanPairs)/static_cast<double>(ssInfo.normal.spanPairs));
+            const double ratio(static_cast<double>(ssInfo.tumor.altAlleleSpanPairs)/static_cast<double>(ssInfo.normal.altAlleleSpanPairs));
             if (ratio<9)
             {
                 isSomatic=false;
             }
         }
-        if (ssInfo.normal.bp1SpanReads)
+        if (ssInfo.normal.altAlleleBp1SpanReads)
         {
-            const double ratio(static_cast<double>(ssInfo.tumor.bp1SpanReads)/static_cast<double>(ssInfo.normal.bp1SpanReads));
+            const double ratio(static_cast<double>(ssInfo.tumor.altAlleleBp1SpanReads)/static_cast<double>(ssInfo.normal.altAlleleBp1SpanReads));
             if (ratio<9)
             {
                 isSomatic=false;
             }
         }
-        if (ssInfo.normal.bp2SpanReads)
+        if (ssInfo.normal.altAlleleBp2SpanReads)
         {
-            const double ratio(static_cast<double>(ssInfo.tumor.bp2SpanReads)/static_cast<double>(ssInfo.normal.bp2SpanReads));
+            const double ratio(static_cast<double>(ssInfo.tumor.altAlleleBp2SpanReads)/static_cast<double>(ssInfo.normal.altAlleleBp2SpanReads));
             if (ratio<9)
             {
                 isSomatic=false;

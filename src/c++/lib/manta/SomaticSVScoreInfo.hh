@@ -17,35 +17,45 @@
 
 #pragma once
 
+#include "blt_util/ReadKey.hh"
+
 #include <iosfwd>
 #include <string>
 #include <set>
 
 
+/// sample-specific evidence info
 struct SVSampleInfo
 {
-
     SVSampleInfo() :
-        bp1SpanReads(0),
-        bp2SpanReads(0),
-        spanPairs(0)
+        altAlleleBp1SpanReads(0),
+        altAlleleBp2SpanReads(0),
+        altAlleleSpanPairs(0),
+        refAlleleBp1SpanPairs(0),
+        refAlleleBp2SpanPairs(0)
     {}
 
     void
     clear()
     {
-        bp1SpanReads=0;
-        bp2SpanReads=0;
-        spanPairs=0;
+        altAlleleBp1SpanReads=0;
+        altAlleleBp2SpanReads=0;
+        altAlleleSpanPairs=0;
+        refAlleleBp1SpanPairs=0;
+        refAlleleBp2SpanPairs=0;
     }
 
-    unsigned bp1SpanReads;
-    unsigned bp2SpanReads;
-    unsigned spanPairs;
+    unsigned altAlleleBp1SpanReads;
+    unsigned altAlleleBp2SpanReads;
+    unsigned altAlleleSpanPairs;
+
+    unsigned refAlleleBp1SpanPairs;
+    unsigned refAlleleBp2SpanPairs;
 };
 
 std::ostream&
 operator<<(std::ostream& os, const SVSampleInfo& si);
+
 
 /// consolidate all somatic scoring results applied to an SV candidate
 struct SomaticSVScoreInfo
@@ -78,8 +88,5 @@ struct SomaticSVScoreInfo
     unsigned somaticScore;
 };
 
-
 std::ostream&
 operator<<(std::ostream& os, const SomaticSVScoreInfo& ssi);
-
-
