@@ -566,7 +566,7 @@ getSVLociImpl(
         // finally, create the graph locus:
         SVLocus locus;
         // set local breakend estimate:
-        const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval,localEvidenceWeight));
+        const NodeIndexType localBreakendNode(locus.addNode(localBreakend.interval));
         locus.setNodeEvidence(localBreakendNode,localEvidenceRange);
 
         if (isComplex)
@@ -576,7 +576,7 @@ getSVLociImpl(
         else
         {
             // set remote breakend estimate:
-            const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval,remoteEvidenceWeight));
+            const NodeIndexType remoteBreakendNode(locus.addNode(remoteBreakend.interval));
             locus.linkNodes(localBreakendNode,remoteBreakendNode,localEvidenceWeight,remoteEvidenceWeight);
 
             locus.mergeSelfOverlap();
