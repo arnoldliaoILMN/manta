@@ -43,7 +43,7 @@ SVFinder(const GSCOptions& opt) :
     _readScanner(_scanOpt,opt.statsFilename,opt.alignFileOpt.alignmentFilename)
 {
     // load in set:
-    _set.load(opt.graphFilename.c_str());
+    _set.load(opt.graphFilename.c_str(),true);
 
     // setup regionless bam_streams:
     // setup all data for main analysis loop:
@@ -111,13 +111,13 @@ addSVNodeRead(
 
         unsigned readLocalIndex(0);
         unsigned readRemoteIndex(1);
-        if (0 == locus.getNode(readLocalIndex).count)
+        if (! locus.getNode(readLocalIndex).isOutCount())
         {
             std::swap(readLocalIndex,readRemoteIndex);
         }
 
-        if (! locus.getNode(readLocalIndex).interval.isIntersect(localNode.interval)) continue;
-        if (! locus.getNode(readRemoteIndex).interval.isIntersect(remoteNode.interval)) continue;
+        if (! locus.getNode(readLocalIndex).getInterval().isIntersect(localNode.getInterval())) continue;
+        if (! locus.getNode(readRemoteIndex).getInterval().isIntersect(remoteNode.getInterval())) continue;
 
         svDataGroup.add(bamRead,isExpectRepeat);
 
@@ -140,9 +140,9 @@ addSVNodeData(
     // get full search interval:
     const SVLocusNode& localNode(locus.getNode(localNodeIndex));
     const SVLocusNode& remoteNode(locus.getNode(remoteNodeIndex));
-    GenomeInterval searchInterval(localNode.interval);
+    GenomeInterval searchInterval(localNode.getInterval());
 
-    searchInterval.range.merge_range(localNode.evidenceRange);
+    searchInterval.range.merge_range(localNode.getEvidenceRange());
 
     const bool isExpectRepeat(svData.setNewSearchInterval(searchInterval));
 
@@ -423,7 +423,7 @@ getCandidatesFromData(
             //
             // we anticipate so few svs from the POC method, that there's no indexing on them
             // OST 26/09/2013: Be careful when re-arranging or rewriting the code below, under g++ 4.1.2
-            // this can lead to an infinite loop. 
+            // this can lead to an infinite loop.
             BOOST_FOREACH(const SVCandidate& readCand, readCandidates)
             {
                 BOOST_FOREACH(SVCandidate& sv, svs)
@@ -507,8 +507,8 @@ findCandidateSV(
     // edge must be bidirectional at the noise threshold of the locus set:
     const SVLocus& locus(set.getLocus(edge.locusIndex));
 
-    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).count < minEdgeCount) ||
-        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).count < minEdgeCount))
+    if ((locus.getEdge(edge.nodeIndex1,edge.nodeIndex2).getCount() < minEdgeCount) ||
+        (locus.getEdge(edge.nodeIndex2,edge.nodeIndex1).getCount() < minEdgeCount))
     {
 #ifdef DEBUG_SVDATA
         log_os << "SVDATA: Edge failed min edge count.\n";
@@ -526,9 +526,9 @@ findCandidateSV(
 
         const SVLocusNode& node(locus.getNode(edge.nodeIndex1));
 
-        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).count;
+        localBreakend.splitCount = node.getEdge(edge.nodeIndex1).getCount();
         localBreakend.state = SVBreakendState::COMPLEX;
-        localBreakend.interval = node.interval;
+        localBreakend.interval = node.getInterval();
 
         remoteBreakend.state = SVBreakendState::UNKNOWN;
 
@@ -570,9 +570,9 @@ findCandidateSV(
 
     getCandidatesFromData(svData,svs);
 
-/*#ifdef DEBUG_SVDATA
-    checkResult(svData,svs);
-#endif*/
+    /*#ifdef DEBUG_SVDATA
+        checkResult(svData,svs);
+    #endif*/
 }
 
 
