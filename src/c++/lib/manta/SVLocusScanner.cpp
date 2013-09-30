@@ -38,6 +38,8 @@
 
 const float SVObservationWeights::closePairFactor(4);
 
+std::string cachedQname;
+uint8_t cachedMapq;
 
 
 struct SimpleAlignment
@@ -516,38 +518,50 @@ getSVCandidatesFromShadow(
     const bam_record* remoteReadPtr,
     std::vector<SVCandidate>& candidates)
 {
-	if (NULL == remoteReadPtr)
-	{
-		// we want info on both reads
-		return;
-	}
 	static const bool isComplex(true);
-	const bam_record& remoteRead(*remoteReadPtr);
-	const SimpleAlignment remoteAlign(remoteRead);
-
 	pos_t singletonGenomePos(0);
 	int targetId(0);
-	if (localRead.is_mate_unmapped()) {
-		// remote read is shadow candidate
-		if (!isGoodShadow(remoteRead,localRead.map_qual(),localRead.qname(),opt.minSingletonMapqGraph)) {
+	if (NULL == remoteReadPtr)
+	{
+		if (!localRead.is_unmapped()) return;
+		// need to take care of this case
+		// need to rely on cached mapq and qname
+		return;
+		if (!isGoodShadow(localRead,cachedMapq,cachedQname,opt.minSingletonMapqGraph))
+		{
 			return;
 		}
 		singletonGenomePos = localAlign.pos;
-		targetId = remoteRead.target_id();
-	} else if (localRead.is_unmapped()){
-		// local is shadow candidate
-		if (!isGoodShadow(localRead,remoteRead.map_qual(),remoteRead.qname(),opt.minSingletonMapqGraph)) {
+		targetId           = localRead.target_id();
+	}
+	else
+	{
+		// have both reads, straightforward from here
+		const bam_record& remoteRead(*remoteReadPtr);
+		const SimpleAlignment remoteAlign(remoteRead);
+
+		if (localRead.is_mate_unmapped()) {
+			// remote read is shadow candidate
+			if (!isGoodShadow(remoteRead,localRead.map_qual(),localRead.qname(),opt.minSingletonMapqGraph)) {
+				return;
+			}
+			singletonGenomePos = localAlign.pos;
+			targetId = remoteRead.target_id();
+		} else if (localRead.is_unmapped()){
+			// local is shadow candidate
+			if (!isGoodShadow(localRead,remoteRead.map_qual(),remoteRead.qname(),opt.minSingletonMapqGraph)) {
+				return;
+			}
+			singletonGenomePos = remoteAlign.pos;
+			targetId = localRead.target_id();
+		} else {
+			// none unmapped, skip this one
 			return;
 		}
-		singletonGenomePos = remoteAlign.pos;
-		targetId = localRead.target_id();
-	} else {
-		// none unmapped, skip this one
-		return;
 	}
-    const pos_t properPairRangeOffset = rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2;
-    const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
-    candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
+	const pos_t properPairRangeOffset = rstats.properPair.min + (rstats.properPair.max-rstats.properPair.min)/2;
+	const pos_t shadowGenomePos = singletonGenomePos + properPairRangeOffset;
+	candidates.push_back(GetSplitSVCandidate(opt,targetId,shadowGenomePos,shadowGenomePos,isComplex));
 }
 
 
@@ -594,7 +608,7 @@ getReadBreakendsImpl(
     // TODO: add SA tag processing
 
     // TODO: process shadow reads
-    //getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
+    getSVCandidatesFromShadow(opt, rstats, localRead, localAlign,remoteReadPtr,candidates);
 
     // - process anomalous read pair relationships:
     getSVCandidatesFromPair(opt, rstats, localRead, localAlign, remoteReadPtr, candidates);
@@ -776,7 +790,8 @@ isReadFiltered(const bam_record& bamRead) const
     if (bamRead.is_filter()) return true;
     if (bamRead.is_dup()) return true;
     if (bamRead.is_secondary()) return true;
-    if (bamRead.map_qual() < _opt.minMapq) return true;
+    // Commenting this out for now, need to check later
+    //if (bamRead.map_qual() < _opt.minMapq) return true;
     return false;
 }
 
@@ -881,6 +896,8 @@ getSVLoci(
 
     const CachedReadGroupStats& rstats(_stats[defaultReadGroupIndex]);
     getSVLociImpl(_opt, rstats, bamRead, loci);
+    cachedQname = bamRead.qname();
+    cachedMapq  = bamRead.map_qual();
 }
 
 
