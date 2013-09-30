@@ -41,4 +41,4 @@ the distribution and will be built from source if not present.
 
 ### Build configuration:
 The build is configured for development rather than distribution. All unit tests are on by default and all builds include -Werror. If cppcheck is found any detected issue is converted to a build error.
-
+#
